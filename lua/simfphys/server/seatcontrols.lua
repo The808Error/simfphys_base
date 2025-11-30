@@ -24,45 +24,46 @@ hook.Add( "PlayerButtonDown", "!!!simfphysButtonDown", function( ply, button )
 	local vehicle = ply:GetSimfphys()
 
 	if not IsValid( vehicle ) then return end
+	local driver = vehicle:GetDriver()
 
 	if button == KEY_1 then
-		if ply == vehicle:GetDriver() then
+		-- Locking/Unlocking the vehicle
+		if ply == driver then
 			if vehicle:GetIsVehicleLocked() then
 				vehicle:UnLock()
 			else
 				vehicle:Lock()
 			end
-		else
-			if not IsValid( vehicle:GetDriver() ) then
-				ply:ExitVehicle()
+		elseif not IsValid( driver ) then
+			-- Switching to the driver seat
+			ply:ExitVehicle()
 
-				local DriverSeat = vehicle:GetDriverSeat()
+			local driverSeat = vehicle:GetDriverSeat()
+			if not IsValid( driverSeat ) then return end
 
-				if IsValid( DriverSeat ) then
-					timer.Simple( FrameTime(), function()
-						if not IsValid( vehicle ) or not IsValid( ply ) then return end
-						if IsValid( vehicle:GetDriver() ) or not IsValid( DriverSeat ) then return end
+			timer.Simple( FrameTime(), function()
+				if not IsValid( vehicle ) or not IsValid( ply ) then return end
+				if IsValid( vehicle:GetDriver() ) or not IsValid( driverSeat ) then return end
 
-						ply:EnterVehicle( DriverSeat )
+				ply:EnterVehicle( driverSeat )
 
-						timer.Simple( FrameTime() * 2, function()
-							if not IsValid( ply ) or not IsValid( vehicle ) then return end
-							ply:SetEyeAngles( Angle( 0, vehicle:GetAngles().y, 0 ) )
-						end )
-					end )
-				end
-			end
+				timer.Simple( FrameTime() * 2, function()
+					if not IsValid( ply ) or not IsValid( vehicle ) then return end
+					ply:SetEyeAngles( Angle( 0, vehicle:GetAngles().y, 0 ) )
+				end )
+			end )
 		end
 	else
-		for _, Pod in pairs( vehicle:GetPassengerSeats() ) do
-			if IsValid( Pod ) and Pod:GetNWInt( "pPodIndex", 3 ) == simfphys.pSwitchKeys[button] and not IsValid( Pod:GetDriver() ) then
+		for _, pod in ipairs( vehicle:GetPassengerSeats() ) do
+			if not IsValid( pod ) then continue end
+			if pod:GetNWInt( "pPodIndex", 3 ) == simfphys.pSwitchKeys[button] and not IsValid( pod:GetDriver() ) then
 				ply:ExitVehicle()
 
 				timer.Simple( FrameTime(), function()
-					if not IsValid( Pod ) or not IsValid( ply ) then return end
-					if IsValid( Pod:GetDriver() ) then return end
+					if not IsValid( pod ) or not IsValid( ply ) then return end
+					if IsValid( pod:GetDriver() ) then return end
 
-					ply:EnterVehicle( Pod )
+					ply:EnterVehicle( pod )
 				end )
 			end
 		end

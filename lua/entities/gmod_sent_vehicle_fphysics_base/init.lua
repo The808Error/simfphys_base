@@ -6,18 +6,22 @@ include("simfunc.lua")
 include("numpads.lua")
 include("damage.lua")
 
-local function EntityLookup(CreatedEntities)
-	return function(id, default)
+local function EntityLookup( createdEntities )
+	return function( id, default )
 		if id == nil then return default end
 		if id == 0 then return game.GetWorld() end
-		local ent = CreatedEntities[id] or (isnumber(id) and ents.GetByIndex(id))
-		if IsValid(ent) then return ent else return default end
+		local ent = createdEntities[id] or ( isnumber( id ) and ents.GetByIndex( id ) )
+		if IsValid( ent ) then
+			return ent
+		else
+			return default
+		end
 	end
 end
 
-function ENT:ApplyDupeInfo(ply, ent, info, GetEntByID)
+function ENT:ApplyDupeInfo( ply, ent, info, GetEntByID )
 	if istable( WireLib ) then
-		WireLib.ApplyDupeInfo(ply, ent, info, GetEntByID)
+		WireLib.ApplyDupeInfo( ply, ent, info, GetEntByID )
 	end
 end
 
@@ -55,126 +59,139 @@ function ENT:Think()
 	local selfTable = self:GetTable()
 
 	self:OnTick()
+	self:NextThink( Time )
 
 	hook.Run( "simfphysOnTick", self, Time )
 
 	selfTable.NextTick = selfTable.NextTick or 0
-	if selfTable.NextTick < Time then
-		selfTable.NextTick = Time + 0.025
+	if selfTable.NextTick > Time then return true end
+	selfTable.NextTick = Time + 0.025
 
-		if IsValid( selfTable.DriverSeat ) then
-			local Driver = selfTable.DriverSeat:GetDriver()
-			Driver = IsValid( selfTable.RemoteDriver ) and selfTable.RemoteDriver or Driver
+	-- Update vehicle
+	if self:IsInitialized() then
+		self:SetColors()
+		self:SimulateVehicle( Time )
+		self:ControlLighting( Time )
+		self:ControlHorn()
 
-			local OldDriver = self:GetDriver()
-			if OldDriver ~= Driver then
-				if self:GetIsVehicleLocked() then
-					self:UnLock()
-				end
-
-				self:SetDriver( Driver )
-
-				local HadDriver = IsValid( OldDriver )
-				local HasDriver = IsValid( Driver )
-
-				if HasDriver then
-					self:SetActive( true )
-					self:SetupControls( Driver )
-
-					if Driver:GetInfoNum( "cl_simfphys_autostart", 1 ) > 0 then
-						self:StartEngine()
-					end
-
-				else
-					if selfTable.ems then
-						selfTable.ems:Stop()
-					end
-
-					if selfTable.horn then
-						selfTable.horn:Stop()
-					end
-
-					if selfTable.PressedKeys then
-						for k,v in pairs( selfTable.PressedKeys ) do
-							if isbool( v ) then
-								selfTable.PressedKeys[k] = false
-							end
-						end
-					end
-
-					if selfTable.keys then
-						for i = 1, table.Count( selfTable.keys ) do
-							numpad.Remove( selfTable.keys[i] )
-						end
-					end
-
-					if HadDriver then
-						if OldDriver:GetInfoNum( "cl_simfphys_autostart", 1 ) > 0 then
-							self:StopEngine()
-							self:SetActive( false )
-						else
-							self:ResetJoystick()
-
-							if not self:EngineActive() then
-								self:SetActive( false )
-							end
-						end
-					else
-						self:SetActive( false )
-						self:StopEngine()
-					end
-				end
-			end
+		if istable( WireLib ) then
+			self:UpdateWireOutputs()
 		end
 
-		if self:IsInitialized() then
-			self:SetColors()
-			self:SimulateVehicle( Time )
-			self:ControlLighting( Time )
-			self:ControlHorn()
+		selfTable.NextWaterCheck = selfTable.NextWaterCheck or 0
+		if selfTable.NextWaterCheck < Time then
+			selfTable.NextWaterCheck = Time + 0.2
+			self:WaterPhysics()
+		end
 
-			if istable( WireLib ) then
-				self:UpdateWireOutputs()
-			end
-
-			selfTable.NextWaterCheck = selfTable.NextWaterCheck or 0
-			if selfTable.NextWaterCheck < Time then
-				selfTable.NextWaterCheck = Time + 0.2
-				self:WaterPhysics()
-			end
-
-			if self:GetActive() then
-				self:SetPhysics( ((math.abs(selfTable.ForwardSpeed) < 50) and (selfTable.Brake > 0 or selfTable.HandBrake > 0)) )
-			else
-				self:SetPhysics( true )
-			end
+		if self:GetActive() then
+			self:SetPhysics( ( ( math.abs( selfTable.ForwardSpeed ) < 50 ) and ( selfTable.Brake > 0 or selfTable.HandBrake > 0 ) ) )
+		else
+			self:SetPhysics( true )
 		end
 	end
 
-	self:NextThink( Time )
+
+	if not IsValid( selfTable.DriverSeat ) then return true end
+	local Driver = selfTable.DriverSeat:GetDriver()
+	Driver = IsValid( selfTable.RemoteDriver ) and selfTable.RemoteDriver or Driver
+
+	local OldDriver = self:GetDriver()
+	if OldDriver == Driver then return true end
+	
+	if self:GetIsVehicleLocked() then
+		self:UnLock()
+	end
+
+	self:SetDriver( Driver )
+
+	local HadDriver = IsValid( OldDriver )
+	local HasDriver = IsValid( Driver )
+
+	if HasDriver then
+		self:SetActive( true )
+		self:SetupControls( Driver )
+
+		if Driver:GetInfoNum( "cl_simfphys_autostart", 1 ) > 0 then
+			self:StartEngine()
+		end
+	else
+		if selfTable.ems then
+			selfTable.ems:Stop()
+		end
+
+		if selfTable.horn then
+			selfTable.horn:Stop()
+		end
+
+		if selfTable.PressedKeys then
+			for k, v in pairs( selfTable.PressedKeys ) do
+				if isbool( v ) then
+					selfTable.PressedKeys[k] = false
+				end
+			end
+		end
+
+		if selfTable.keys then
+			for i = 1, #selfTable.keys do
+				numpad.Remove( selfTable.keys[i] )
+			end
+		end
+
+		if HadDriver then
+			if OldDriver:GetInfoNum( "cl_simfphys_autostart", 1 ) > 0 then
+				self:StopEngine()
+				self:SetActive( false )
+			else
+				self:ResetJoystick()
+
+				if not self:EngineActive() then
+					self:SetActive( false )
+				end
+			end
+		else
+			self:SetActive( false )
+			self:StopEngine()
+		end
+	end
 
 	return true
 end
 
 function ENT:ControlHorn()
 	local selfTbl = self:GetTable()
-	local HornVol = selfTbl.HornKeyIsDown and 1 or 0
-	selfTbl.HornVolume = selfTbl.HornVolume and selfTbl.HornVolume + math.Clamp(HornVol - selfTbl.HornVolume,-0.45,0.8) or 0
+	if not selfTbl.horn then return end
 
-	if selfTbl.horn then
-		if selfTbl.HornVolume <= 0 then
-			if selfTbl.horn then
-				selfTbl.horn:Stop()
-				selfTbl.horn = nil
-			end
-		else
-			selfTbl.horn:ChangeVolume( selfTbl.HornVolume ^ 2 )
+	local HornVol = selfTbl.HornKeyIsDown and 1 or 0
+	selfTbl.HornVolume = selfTbl.HornVolume and selfTbl.HornVolume + math.Clamp( HornVol - selfTbl.HornVolume, -0.45, 0.8 ) or 0
+
+	if selfTbl.HornVolume <= 0 then
+		if selfTbl.horn then
+			selfTbl.horn:Stop()
+			selfTbl.horn = nil
 		end
+	else
+		selfTbl.horn:ChangeVolume( selfTbl.HornVolume ^ 2 )
 	end
 end
 
 function ENT:createWireIO()
-	self.Inputs = WireLib.CreateInputs( self,{"Eject Driver","Eject Passengers","Lock","Engine Start","Engine Stop","Engine Toggle","Steer","Throttle","Gear Up","Gear Down","Set Gear","Clutch","Handbrake","Brake/Reverse"} )
+	self.Inputs = WireLib.CreateInputs( self, {
+		"Eject Driver",
+		"Eject Passengers",
+		"Lock",
+		"Engine Start",
+		"Engine Stop",
+		"Engine Toggle",
+		"Steer",
+		"Throttle",
+		"Gear Up",
+		"Gear Down",
+		"Set Gear",
+		"Clutch",
+		"Handbrake",
+		"Brake/Reverse"
+	} )
 	--self.Inputs = WireLib.CreateSpecialInputs(self, { "blah" }, { "NORMAL" })
 
 	self.Outputs = WireLib.CreateSpecialOutputs( self,
@@ -229,24 +246,22 @@ function ENT:TriggerInput( name, value )
 		end
 	end
 
-	if name == "Eject Passengers" then
-		if istable( self.pSeat ) then
-			for i = 1, table.Count( self.pSeat ) do
-				if IsValid( self.pSeat[i] ) then
+	if name == "Eject Passengers" and istable( self.pSeat ) then
+		for i = 1, #self.pSeat do
+			local seat = self.pSeat[i]
+			if not IsValid( seat ) then continue end
 
-					local Driver = self.pSeat[i]:GetDriver()
+			local Driver = seat:GetDriver()
 
-					if IsValid( Driver ) then
-						Driver:ExitVehicle()
-					end
-				end
+			if IsValid( Driver ) then
+				Driver:ExitVehicle()
 			end
 		end
 	end
 
 	if name == "Steer" then
 		self:SteerVehicle( math.Clamp( value, -1 , 1) * self.VehicleData["steerangle"] )
-		for i = 1, table.Count(self.Wheels) do
+		for i = 1, #self.Wheels do
 			local Wheel = self.Wheels[i]
 			if IsValid( Wheel ) then
 				Wheel:PhysWake()
@@ -264,14 +279,14 @@ function ENT:TriggerInput( name, value )
 
 	if name == "Gear Up" then
 		if value >= 1 then
-			self.CurrentGear = math.Clamp(self.CurrentGear + 1,1,table.Count( self.Gears ) )
+			self.CurrentGear = math.Clamp( self.CurrentGear + 1, 1, #self.Gears )
 			self:SetGear( self.CurrentGear )
 		end
 	end
 
 	if name == "Gear Down" then
 		if value >= 1 then
-			self.CurrentGear = math.Clamp(self.CurrentGear - 1,1,table.Count( self.Gears ) )
+			self.CurrentGear = math.Clamp( self.CurrentGear - 1, 1, #self.Gears )
 			self:SetGear( self.CurrentGear )
 		end
 	end
@@ -285,35 +300,35 @@ function ENT:TriggerInput( name, value )
 	end
 
 	if name == "Handbrake" then
-		self.PressedKeys["joystick_handbrake"] = (value > 0) and 1 or 0
+		self.PressedKeys["joystick_handbrake"] = ( value > 0 ) and 1 or 0
 	end
 end
 
 function ENT:ForceGear( desGear )
-	self.CurrentGear = math.Clamp( math.Round( desGear, 0 ),1,table.Count( self.Gears ) )
+	self.CurrentGear = math.Clamp( math.Round( desGear, 0 ), 1, #self.Gears )
 	self:SetGear( self.CurrentGear )
 end
 
 function ENT:UpdateWireOutputs()
-	WireLib.TriggerOutput(self, "Active", self:EngineActive() and 1 or 0 )
-	WireLib.TriggerOutput(self, "Health", self:GetCurHealth() )
-
-	WireLib.TriggerOutput(self, "Driver", self:GetDriver() )
-	WireLib.TriggerOutput(self, "Torque", self.Torque )
-	WireLib.TriggerOutput(self, "RPM", self:GetEngineRPM() )
-
-	WireLib.TriggerOutput(self, "Gear", self:GetGear() )
-	WireLib.TriggerOutput(self, "Ratio",self:GetGear() == 2 and 0 or (self.GearRatio or 0) )
-
-	WireLib.TriggerOutput(self, "Lights Enabled", self:GetLightsEnabled() and 1 or 0 )
-	WireLib.TriggerOutput(self, "Highbeams Enabled", self:GetLampsEnabled() and 1 or 0 )
-	WireLib.TriggerOutput(self, "Foglights Enabled", self:GetFogLightsEnabled() and 1 or 0 )
-	WireLib.TriggerOutput(self, "Sirens Enabled", self:GetEMSEnabled() and 1 or 0 )
-	WireLib.TriggerOutput(self, "Turn Signals Enabled", self:GetTSEnabled())
-	WireLib.TriggerOutput(self, "Remaining Fuel", self:GetFuel())
+	WireLib.TriggerOutput( self, "Active", self:EngineActive() and 1 or 0 )
+	WireLib.TriggerOutput( self, "Health", self:GetCurHealth() )
+ 
+	WireLib.TriggerOutput( self, "Driver", self:GetDriver() )
+	WireLib.TriggerOutput( self, "Torque", self.Torque )
+	WireLib.TriggerOutput( self, "RPM", self:GetEngineRPM() )
+ 
+	WireLib.TriggerOutput( self, "Gear", self:GetGear() )
+	WireLib.TriggerOutput( self, "Ratio",self:GetGear() == 2 and 0 or ( self.GearRatio or 0 ) )
+ 
+	WireLib.TriggerOutput( self, "Lights Enabled", self:GetLightsEnabled() and 1 or 0 )
+	WireLib.TriggerOutput( self, "Highbeams Enabled", self:GetLampsEnabled() and 1 or 0 )
+	WireLib.TriggerOutput( self, "Foglights Enabled", self:GetFogLightsEnabled() and 1 or 0 )
+	WireLib.TriggerOutput( self, "Sirens Enabled", self:GetEMSEnabled() and 1 or 0 )
+	WireLib.TriggerOutput( self, "Turn Signals Enabled", self:GetTSEnabled() )
+	WireLib.TriggerOutput( self, "Remaining Fuel", self:GetFuel() )
 end
 
-function ENT:OnActiveChanged( name, old, new)
+function ENT:OnActiveChanged( name, old, new )
 	if new == old then return end
 
 	if not self:IsInitialized() then return end
@@ -321,8 +336,7 @@ function ENT:OnActiveChanged( name, old, new)
 	local TurboCharged = self:GetTurboCharged()
 	local SuperCharged = self:GetSuperCharged()
 
-	if new == true then
-
+	if new then
 		self.HandBrakePower = self:GetMaxTraction() + 20 - self:GetTractionBias() * self:GetMaxTraction()
 
 		if self:GetEMSEnabled() then
@@ -332,16 +346,16 @@ function ENT:OnActiveChanged( name, old, new)
 		end
 
 		if TurboCharged then
-			self.Turbo = CreateSound(self, self.snd_spool or "simulated_vehicles/turbo_spin.wav")
-			self.Turbo:PlayEx(0,0)
+			self.Turbo = CreateSound( self, self.snd_spool or "simulated_vehicles/turbo_spin.wav" )
+			self.Turbo:PlayEx( 0, 0 )
 		end
 
 		if SuperCharged then
-			self.Blower = CreateSound(self, self.snd_bloweroff or "simulated_vehicles/blower_spin.wav")
-			self.BlowerWhine = CreateSound(self, self.snd_bloweron or "simulated_vehicles/blower_gearwhine.wav")
+			self.Blower = CreateSound( self, self.snd_bloweroff or "simulated_vehicles/blower_spin.wav" )
+			self.BlowerWhine = CreateSound( self, self.snd_bloweron or "simulated_vehicles/blower_gearwhine.wav" )
 
-			self.Blower:PlayEx(0,0)
-			self.BlowerWhine:PlayEx(0,0)
+			self.Blower:PlayEx( 0, 0 )
+			self.BlowerWhine:PlayEx( 0, 0 )
 		end
 	else
 		self:StopEngine()
@@ -358,51 +372,47 @@ function ENT:OnActiveChanged( name, old, new)
 		self:SetIsBraking( false )
 	end
 
-	if istable( self.Wheels ) then
-		for i = 1, table.Count( self.Wheels ) do
-			local Wheel = self.Wheels[ i ]
-			if IsValid(Wheel) then
-				Wheel:SetOnGround( 0 )
-			end
+
+	if not istable( self.Wheels ) then return end
+
+	for i = 1, #self.Wheels do
+		local wheel = self.Wheels[ i ]
+		if IsValid(wheel) then
+			wheel:SetOnGround( 0 )
 		end
 	end
 end
 
 function ENT:OnThrottleChanged( name, old, new)
 	if new == old then return end
-
-	local Health = self:GetCurHealth()
-	local MaxHealth = self:GetMaxHealth()
-	local Active = self:EngineActive()
-
 	if new == 1 then
-		if Health < MaxHealth * 0.6 then
-			if Active then
-				if math.Round(math.random(0,4),0) == 1 then
-					self:DamagedStall()
-				end
+		if self:GetCurHealth() < self:GetMaxHealth() * 0.6 then
+			if not self:EngineActive() then return end
+			if math.Round( math.random( 0, 4 ), 0 ) == 1 then
+				self:DamagedStall()
 			end
 		end
-	end
+	elseif new == 0 then
+		if not self:GetTurboCharged() then return end
+		if self.SmoothTurbo > 350 then
+			local vol = math.Clamp( ( ( self.SmoothTurbo - 300 ) / 150 ), 0, 1 ) * 0.5
 
-	if new == 0 then
-		if self:GetTurboCharged() then
-			if (self.SmoothTurbo > 350) then
-				local Volume = math.Clamp( ((self.SmoothTurbo - 300) / 150) ,0, 1) * 0.5
-				self.SmoothTurbo = 0
-				self.BlowOff:Stop()
-				self.BlowOff = CreateSound(self, self.snd_blowoff or "simulated_vehicles/turbo_blowoff.ogg")
-				self.BlowOff:PlayEx(Volume,100)
-			end
+			self.SmoothTurbo = 0
+			self.BlowOff:Stop()
+			self.BlowOff = CreateSound( self, self.snd_blowoff or "simulated_vehicles/turbo_blowoff.ogg" )
+			self.BlowOff:PlayEx( vol, 100 )
 		end
 	end
 end
 
 function ENT:WaterPhysics()
-	if self:WaterLevel() <= 1 then self.IsInWater = false return end
+	if self:WaterLevel() <= 1 then
+		self.IsInWater = false
+
+		return
+	end
 
 	if self:GetDoNotStall() then
-
 		self:SetOnFire( false )
 		self:SetOnSmoke( false )
 
@@ -424,27 +434,25 @@ function ENT:WaterPhysics()
 	end
 
 	local phys = self:GetPhysicsObject()
-	phys:ApplyForceCenter( -self:GetVelocity() * 0.5 * phys:GetMass() )
+	phys:ApplyForceCenter( -phys:GetVelocity() * 0.5 * phys:GetMass() )
 end
 
 function ENT:SetColors()
-	if self.ColorableProps then
+	if not self.ColorableProps then return end
 
-		local Color = self:GetColor()
-		local dot = Color.r * Color.g * Color.b * Color.a
+	local color = self:GetColor()
+	local dot = color.r * color.g * color.b * color.a
 
-		if dot ~= self.OldColor then
+	if dot == self.OldColor then return end
 
-			for i, prop in pairs( self.ColorableProps ) do
-				if IsValid(prop) then
-					prop:SetColor( Color )
-					prop:SetRenderMode( self:GetRenderMode() )
-				end
-			end
-
-			self.OldColor = dot
+	for _, prop in ipairs( self.ColorableProps ) do
+		if IsValid( prop ) then
+			prop:SetColor( color )
+			prop:SetRenderMode( self:GetRenderMode() )
 		end
 	end
+
+	self.OldColor = dot
 end
 
 function ENT:ControlLighting( curtime )
@@ -599,11 +607,11 @@ function ENT:SetupControls( ply )
 
 	if IsValid( ply ) then
 		self.cl_SteerSettings = {
-			Overwrite = (ply:GetInfoNum( "cl_simfphys_overwrite", 0 ) >= 1),
+			Overwrite = ( ply:GetInfoNum( "cl_simfphys_overwrite", 0 ) >= 1 ),
 			TurnSpeed = ply:GetInfoNum( "cl_simfphys_steerspeed", 8 ),
 			fadespeed = ply:GetInfoNum( "cl_simfphys_fadespeed", 535 ),
 			fastspeedangle = ply:GetInfoNum( "cl_simfphys_steerangfast", 10 ),
-			smoothsteer = (ply:GetInfoNum( "cl_simfphys_smoothsteer", 0 ) >= 1),
+			smoothsteer = ( ply:GetInfoNum( "cl_simfphys_smoothsteer", 0 ) >= 1 ),
 		}
 
 		local W = ply:GetInfoNum( "cl_simfphys_keyforward", 0 )
@@ -687,25 +695,25 @@ function ENT:SetupControls( ply )
 		local k_lock_up = numpad.OnUp( ply, lock, "k_lock",self, false )
 
 		self.keys = {
-			w_dn,w_up,
-			s_dn,s_up,
-			a_dn,a_up,
-			d_dn,d_up,
-			aw_dn,aw_up,
-			as_dn,as_up,
-			aa_dn,aa_up,
-			ad_dn,ad_up,
-			gup_dn,gup_up,
-			gdn_dn,gdn_up,
-			shift_dn,shift_up,
-			alt_dn,alt_up,
-			space_dn,space_up,
+			w_dn, w_up,
+			s_dn, s_up,
+			a_dn, a_up,
+			d_dn, d_up,
+			aw_dn, aw_up,
+			as_dn, as_up,
+			aa_dn, aa_up,
+			ad_dn, ad_up,
+			gup_dn, gup_up,
+			gdn_dn, gdn_up,
+			shift_dn, shift_up,
+			alt_dn, alt_up,
+			space_dn, space_up,
 			k_cruise,
-			k_lights_dn,k_lights_up,
-			k_horn_dn,k_horn_up,
-			k_flights_dn,k_flights_up,
-			k_engine_dn,k_engine_up,
-			k_lock_dn,k_lock_up,
+			k_lights_dn, k_lights_up,
+			k_horn_dn, k_horn_up,
+			k_flights_dn, k_flights_up,
+			k_engine_dn, k_engine_up,
+			k_lock_dn, k_lock_up,
 		}
 	end
 end
@@ -713,7 +721,7 @@ end
 function ENT:PlayAnimation( animation )
 	local anims = string.Implode( ",", self:GetSequenceList() )
 
-	if not animation or not string.match( string.lower(anims), string.lower( animation ), 1 ) then return end
+	if not animation or not string.match( string.lower( anims ), string.lower( animation ), 1 ) then return end
 
 	local sequence = self:LookupSequence( animation )
 
@@ -724,54 +732,54 @@ end
 
 function ENT:PhysicalSteer()
 	local selfTbl = self:GetTable()
-	if IsValid(selfTbl.SteerMaster) then
+	if IsValid( selfTbl.SteerMaster ) then
 		local physobj = selfTbl.SteerMaster:GetPhysicsObject()
-		if not IsValid(physobj) then return end
+		if not IsValid( physobj ) then return end
 
 		if physobj:IsMotionEnabled() then
-			physobj:EnableMotion(false)
+			physobj:EnableMotion( false )
 		end
 
-		selfTbl.SteerMaster:SetAngles( self:LocalToWorldAngles( Angle(0,math.Clamp(-selfTbl.VehicleData[ "Steer" ],-selfTbl.CustomSteerAngle,selfTbl.CustomSteerAngle),0) ) )
+		selfTbl.SteerMaster:SetAngles( self:LocalToWorldAngles( Angle( 0, math.Clamp( -selfTbl.VehicleData[ "Steer" ], -selfTbl.CustomSteerAngle, selfTbl.CustomSteerAngle ), 0 ) ) )
 	end
 
-	if IsValid(selfTbl.SteerMaster2) then
+	if IsValid( selfTbl.SteerMaster2 ) then
 		local physobj = selfTbl.SteerMaster2:GetPhysicsObject()
-		if not IsValid(physobj) then return end
+		if not IsValid( physobj ) then return end
 
 		if physobj:IsMotionEnabled() then
-			physobj:EnableMotion(false)
+			physobj:EnableMotion( false )
 		end
 
-		selfTbl.SteerMaster2:SetAngles( self:LocalToWorldAngles( Angle(0,math.Clamp(selfTbl.VehicleData[ "Steer" ],-selfTbl.CustomSteerAngle,selfTbl.CustomSteerAngle),0) ) )
+		selfTbl.SteerMaster2:SetAngles( self:LocalToWorldAngles( Angle( 0, math.Clamp( selfTbl.VehicleData[ "Steer" ], -selfTbl.CustomSteerAngle, selfTbl.CustomSteerAngle ), 0 ) ) )
 	end
 end
 
 function ENT:IsInitialized()
-	return (self.EnableSuspension == 1)
+	return self.EnableSuspension == 1
 end
 
 function ENT:EngineActive()
-	return (self.EngineIsOn == 1)
+	return self.EngineIsOn == 1
 end
 
 function ENT:IsDriveWheelsOnGround()
-	return (self.DriveWheelsOnGround == 1)
+	return self.DriveWheelsOnGround == 1
 end
 
 function ENT:GetRPM()
-	local RPM = self.EngineRPM and self.EngineRPM or 0
-	return RPM
+	return self.EngineRPM or 0
 end
 
 function ENT:GetEngineRPM()
 	local flywheelrpm = self:GetRPM()
 	local rpm
+
 	if self:GetRevlimiter() then
 		local throttle = self:GetThrottle()
 		local maxrpm = self:GetLimitRPM()
 		local revlimiter = (maxrpm > 2500) and (throttle > 0)
-		rpm = math.Round(((flywheelrpm >= maxrpm - 200) and revlimiter) and math.Round(flywheelrpm - 200 + math.sin(CurTime()* 50) * 600,0) or flywheelrpm,0)
+		rpm = math.Round( ( ( flywheelrpm >= maxrpm - 200 ) and revlimiter ) and math.Round( flywheelrpm - 200 + math.sin( CurTime() * 50 ) * 600,0 ) or flywheelrpm,0 )
 	else
 		rpm = flywheelrpm
 	end
@@ -780,22 +788,24 @@ function ENT:GetEngineRPM()
 end
 
 function ENT:GetDiffGear()
-	return math.max(self:GetDifferentialGear(),0.01)
+	return math.max( self:GetDifferentialGear(), 0.01 )
 end
+
+
+local R_TIMER = 0.8
 
 function ENT:DamagedStall()
 	if not self:GetActive() then return end
 
-	local rtimer = 0.8
-
-	timer.Simple( rtimer, function()
+	timer.Simple( R_TIMER, function()
 		if not IsValid( self ) then return end
+
 		net.Start( "simfphys_backfire", true )
 			net.WriteEntity( self )
 		net.Broadcast()
 	end)
 
-	self:StallAndRestart( rtimer, true )
+	self:StallAndRestart( R_TIMER, true )
 end
 
 function ENT:StopEngine()
@@ -820,30 +830,28 @@ function ENT:CanStart()
 		FuelSystemOK = self:GetFuel() > 0
 	end
 
-	local canstart = self:GetCurHealth() > (self:GetMaxHealth() * 0.1) and FuelSystemOK
+	local canstart = self:GetCurHealth() > ( self:GetMaxHealth() * 0.1 ) and FuelSystemOK
 
 	return canstart
 end
 
 function ENT:StartEngine( bIgnoreSettings )
 	if not self:CanStart() then return end
+	if self:EngineActive() then return end
 
-	if not self:EngineActive() then
+	if hook.Run( "simfphysOnEngine", self, true, bIgnoreSettings ) then return end
 
-		if hook.Run( "simfphysOnEngine", self, true, bIgnoreSettings ) then return end
+	if not bIgnoreSettings then
+		self.CurrentGear = 2
+	end
 
-		if not bIgnoreSettings then
-			self.CurrentGear = 2
-		end
-
-		if not self.IsInWater then
+	if not self.IsInWater then
+		self.EngineRPM = self:GetEngineData().IdleRPM
+		self.EngineIsOn = 1
+	else
+		if self:GetDoNotStall() then
 			self.EngineRPM = self:GetEngineData().IdleRPM
 			self.EngineIsOn = 1
-		else
-			if self:GetDoNotStall() then
-				self.EngineRPM = self:GetEngineData().IdleRPM
-				self.EngineIsOn = 1
-			end
 		end
 	end
 end
@@ -854,60 +862,60 @@ function ENT:StallAndRestart( nTimer, bIgnoreSettings )
 	self:StopEngine()
 
 	local ply = self:GetDriver()
-	if IsValid(ply) and not bIgnoreSettings then
+	if IsValid( ply ) and not bIgnoreSettings then
 		if ply:GetInfoNum( "cl_simfphys_autostart", 1 ) <= 0 then return end
 	end
 
 	timer.Simple( nTimer, function()
-		if not IsValid(self) then return end
+		if not IsValid( self ) then return end
 		self:StartEngine( bIgnoreSettings )
 	end)
 end
 
 function ENT:PlayerSteerVehicle( ply, left, right )
-	if IsValid( ply ) then
-		local CounterSteeringEnabled = (ply:GetInfoNum( "cl_simfphys_ctenable", 0 ) or 1) == 1
-		local CounterSteeringMul =  math.Clamp(ply:GetInfoNum( "cl_simfphys_ctmul", 0 ) or 0.7,0.1,2)
-		local MaxHelpAngle = math.Clamp(ply:GetInfoNum( "cl_simfphys_ctang", 0 ) or 15,1,90)
+	if not IsValid( ply ) then return end
 
-		local Ang = self.MoveDir
+	local CounterSteeringEnabled = ( ply:GetInfoNum( "cl_simfphys_ctenable", 0 ) or 1 ) == 1
+	local CounterSteeringMul =  math.Clamp( ply:GetInfoNum( "cl_simfphys_ctmul", 0 ) or 0.7, 0.1, 2 )
+	local MaxHelpAngle = math.Clamp( ply:GetInfoNum( "cl_simfphys_ctang", 0 ) or 15, 1, 90 )
 
-		local TurnSpeed
-		local fadespeed
-		local fastspeedangle
-		local extrasmooth = false
+	local Ang = self.MoveDir
 
-		if istable(self.cl_SteerSettings) and self.cl_SteerSettings.Overwrite then
-			TurnSpeed = self.cl_SteerSettings.TurnSpeed
-			fadespeed = self.cl_SteerSettings.fadespeed
-			fastspeedangle = self.cl_SteerSettings.fastspeedangle
-			extrasmooth =  self.cl_SteerSettings.smoothsteer
-		else
-			TurnSpeed = self:GetSteerSpeed()
-			fadespeed = self:GetFastSteerConeFadeSpeed()
-			fastspeedangle = self:GetFastSteerAngle() * self.VehicleData["steerangle"]
-		end
+	local TurnSpeed
+	local fadespeed
+	local fastspeedangle
+	local extrasmooth = false
 
-		local SlowSteeringRate = (Ang > 20) and ((math.Clamp((self.ForwardSpeed - 150) / 25,0,1) == 1) and 60 or self.VehicleData["steerangle"]) or self.VehicleData["steerangle"]
-		local FastSteeringAngle = math.Clamp(fastspeedangle,1,SlowSteeringRate)
-
-		local FastSteeringRate = FastSteeringAngle + ((Ang > (FastSteeringAngle-1)) and 1 or 0) * math.min(Ang,90 - FastSteeringAngle)
-
-		local Ratio = 1 - math.Clamp((math.abs(self.ForwardSpeed) - fadespeed) / 25,0,1)
-
-		local SteerRate = FastSteeringRate + (SlowSteeringRate - FastSteeringRate) * Ratio
-		local Steer = ((left + right) > 0 and (right - left) or self:GetMouseSteer()) * SteerRate
-
-		local LocalDrift = math.acos( math.Clamp( self.Right:Dot(self.VelNorm) ,-1,1) ) * (180 / math.pi) - 90
-
-		local CounterSteer = CounterSteeringEnabled and (math.Clamp(LocalDrift * CounterSteeringMul * (((left + right) == 0) and 1 or 0),-MaxHelpAngle,MaxHelpAngle) * ((self.ForwardSpeed > 50) and 1 or 0)) or 0
-
-		local Rate = extrasmooth and math.max( (math.abs(self.SmoothAng) / self.VehicleData["steerangle"]) ^ 1.5 * TurnSpeed, math.max(1 - self.ForwardSpeed / 2000,0.05) ) or TurnSpeed
-
-		self.SmoothAng = self.SmoothAng + math.Clamp((Steer - CounterSteer) - self.SmoothAng,-Rate,Rate)
-
-		self:SteerVehicle( self.SmoothAng )
+	if istable( self.cl_SteerSettings ) and self.cl_SteerSettings.Overwrite then
+		TurnSpeed = self.cl_SteerSettings.TurnSpeed
+		fadespeed = self.cl_SteerSettings.fadespeed
+		fastspeedangle = self.cl_SteerSettings.fastspeedangle
+		extrasmooth =  self.cl_SteerSettings.smoothsteer
+	else
+		TurnSpeed = self:GetSteerSpeed()
+		fadespeed = self:GetFastSteerConeFadeSpeed()
+		fastspeedangle = self:GetFastSteerAngle() * self.VehicleData["steerangle"]
 	end
+
+	local SlowSteeringRate = (Ang > 20) and ((math.Clamp((self.ForwardSpeed - 150) / 25,0,1) == 1) and 60 or self.VehicleData["steerangle"]) or self.VehicleData["steerangle"]
+	local FastSteeringAngle = math.Clamp(fastspeedangle,1,SlowSteeringRate)
+
+	local FastSteeringRate = FastSteeringAngle + ((Ang > (FastSteeringAngle-1)) and 1 or 0) * math.min(Ang,90 - FastSteeringAngle)
+
+	local Ratio = 1 - math.Clamp((math.abs(self.ForwardSpeed) - fadespeed) / 25,0,1)
+
+	local SteerRate = FastSteeringRate + (SlowSteeringRate - FastSteeringRate) * Ratio
+	local Steer = ((left + right) > 0 and (right - left) or self:GetMouseSteer()) * SteerRate
+
+	local LocalDrift = math.acos( math.Clamp( self.Right:Dot(self.VelNorm) ,-1,1) ) * (180 / math.pi) - 90
+
+	local CounterSteer = CounterSteeringEnabled and (math.Clamp(LocalDrift * CounterSteeringMul * (((left + right) == 0) and 1 or 0),-MaxHelpAngle,MaxHelpAngle) * ((self.ForwardSpeed > 50) and 1 or 0)) or 0
+
+	local Rate = extrasmooth and math.max( (math.abs(self.SmoothAng) / self.VehicleData["steerangle"]) ^ 1.5 * TurnSpeed, math.max(1 - self.ForwardSpeed / 2000,0.05) ) or TurnSpeed
+
+	self.SmoothAng = self.SmoothAng + math.Clamp((Steer - CounterSteer) - self.SmoothAng,-Rate,Rate)
+
+	self:SteerVehicle( self.SmoothAng )
 end
 
 function ENT:SteerVehicle( steer )
@@ -995,7 +1003,9 @@ function ENT:EnteringSequence( ply )
 end
 
 function ENT:GetMouseSteer()
-	if IsValid(self.DriverSeat) then return (self.DriverSeat.ms_Steer or 0) end
+	if IsValid( self.DriverSeat ) then
+		return self.DriverSeat.ms_Steer or 0
+	end
 
 	return 0
 end
@@ -1017,39 +1027,34 @@ end
 function ENT:SetPassenger( ply )
 	if not IsValid( ply ) then return end
 
-	if not IsValid(self:GetDriver()) and not ply:KeyDown(IN_WALK) then
+	if not IsValid( self:GetDriver() ) and not ply:KeyDown( IN_WALK ) then
 		ply:SetAllowWeaponsInVehicle( false )
-		if IsValid(self.DriverSeat) then
 
-			self:EnteringSequence( ply )
-			ply:EnterVehicle( self.DriverSeat )
+		if not IsValid( self.DriverSeat ) then return end
 
-			timer.Simple( 0.01, function()
-				if IsValid(ply) then
-					local angles = Angle(0,90,0)
-					ply:SetEyeAngles( angles )
-				end
-			end)
+		self:EnteringSequence( ply )
+		ply:EnterVehicle( self.DriverSeat )
+
+		timer.Simple( 0.01, function()
+			if IsValid(ply) then
+				local angles = Angle( 0, 90, 0 )
+				ply:SetEyeAngles( angles )
+			end
+		end )
+	elseif not self.PassengerSeats then
+		local closestSeat = self:GetClosestSeat( ply )
+		if closestSeat and IsValid( closestSeat:GetDriver() ) then
+			ply:EnterVehicle( closestSeat )
+			return
 		end
-	else
-		if self.PassengerSeats then
-			local closestSeat = self:GetClosestSeat( ply )
+		
+		for i = 1, #self.pSeat do
+			local seat = self.pSeat[i]
+			if not IsValid( seat ) then continue end
 
-			if not closestSeat or IsValid( closestSeat:GetDriver() ) then
-
-				for i = 1, table.Count( self.pSeat ) do
-					if IsValid(self.pSeat[i]) then
-
-						local HasPassenger = IsValid(self.pSeat[i]:GetDriver())
-
-						if not HasPassenger then
-							ply:EnterVehicle( self.pSeat[i] )
-							break
-						end
-					end
-				end
-			else
-				ply:EnterVehicle( closestSeat )
+			if not IsValid( seat:GetDriver() ) then
+				ply:EnterVehicle( seat )
+				break
 			end
 		end
 	end
@@ -1057,14 +1062,14 @@ end
 
 function ENT:GetClosestSeat( ply )
 	local Seat = self.pSeat[1]
-	if not IsValid(Seat) then return false end
+	if not IsValid( Seat ) then return false end
 
-	local Distance = (Seat:GetPos() - ply:GetPos()):Length()
+	local distance = ( Seat:GetPos() - ply:GetPos() ):Length()
 
-	for i = 1, table.Count( self.pSeat ) do
-		local Dist = (self.pSeat[i]:GetPos() - ply:GetPos()):Length()
-		if (Dist < Distance) then
-			Seat = self.pSeat[i]
+	for i = 1, #self.pSeat do
+		local dist = ( self.pSeat[i]:GetPos() - ply:GetPos() ):Length()
+		if ( dist < distance) then
+			seat = self.pSeat[i]
 		end
 	end
 
@@ -1084,15 +1089,14 @@ function ENT:HasPassengerEnemyTeam( ply )
 	end
 
 	if self.PassengerSeats then
-		for i = 1, table.Count( self.pSeat ) do
-			if IsValid(self.pSeat[i]) then
+		for i = 1, #self.pSeat do
+			local seat = self.pSeat[i]
+			if not IsValid( seat ) then continue end
 
-				local Passenger = self.pSeat[i]:GetDriver()
-				if IsValid( Passenger ) then
-					if Passenger:Team() ~= myteam then
-						return true
-					end
-				end
+			local Passenger = seat:GetDriver()
+			if not IsValid( Passenger ) then continue end
+			if Passenger:Team() ~= myteam then
+				return true
 			end
 		end
 	end
@@ -1102,36 +1106,37 @@ end
 
 function ENT:SetPhysics( enable )
 	if enable then
-		if not self.PhysicsEnabled then
-			for i = 1, table.Count( self.Wheels ) do
-				local Wheel = self.Wheels[i]
-				if IsValid(Wheel) then
-					Wheel:GetPhysicsObject():SetMaterial("jeeptire")
-				end
+		if self.PhysicsEnabled then return end
+		for i = 1, #self.Wheels do
+			local wheel = self.Wheels[i]
+			if IsValid( wheel ) then
+				wheel:GetPhysicsObject():SetMaterial("jeeptire")
 			end
-			self.PhysicsEnabled = true
 		end
+			
+		self.PhysicsEnabled = true
 	else
-		if self.PhysicsEnabled ~= false then
-			for i = 1, table.Count( self.Wheels ) do
-				local Wheel = self.Wheels[i]
-				if IsValid(Wheel) then
-					Wheel:GetPhysicsObject():SetMaterial("friction_00")
-					if Wheel:GetPhysicsObject():GetMaterial() ~= "friction_00" then
-						print("(SIMFPHYS) ERROR! MISSING ''friction_00'' PHYSPROP-MATERIAL!!! THIS SHOULD NEVER HAPPEN!! CLEAN YOUR GMOD!! DON'T USE CONTENT OF GAMES YOU DON'T OWN!! DON'T EVEN BOTHER REPORTING THIS ISSUE, BECAUSE ONLY YOU CAN FIX THIS AS THIS IS AN ISSUE WITH YOUR GAME!!!!")
-						sound.Play( "common/bugreporter_failed.wav", self:GetPos() )
-						self:Remove()
+		if not self.PhysicsEnabled then return end
 
-						break
-					end
-				end
+		for i = 1, #self.Wheels do
+			local wheel = self.Wheels[i]
+			if not IsValid( wheel ) then continue end
+
+			wheel:GetPhysicsObject():SetMaterial("friction_00")
+			if wheel:GetPhysicsObject():GetMaterial() ~= "friction_00" then
+				print("(SIMFPHYS) ERROR! MISSING ''friction_00'' PHYSPROP-MATERIAL!!! THIS SHOULD NEVER HAPPEN!! CLEAN YOUR GMOD!! DON'T USE CONTENT OF GAMES YOU DON'T OWN!! DON'T EVEN BOTHER REPORTING THIS ISSUE, BECAUSE ONLY YOU CAN FIX THIS AS THIS IS AN ISSUE WITH YOUR GAME!!!!")
+				sound.Play( "common/bugreporter_failed.wav", self:GetPos() )
+				self:Remove()
+
+				break
 			end
-			self.PhysicsEnabled = false
 		end
+
+		self.PhysicsEnabled = false
 	end
 end
 
-function ENT:SetSuspension( index , bIsDamaged )
+function ENT:SetSuspension( index, bIsDamaged )
 	local bIsDamaged = bIsDamaged or false
 
 	local h_mod = index <= 2 and self:GetFrontSuspensionHeight() or self:GetRearSuspensionHeight()
@@ -1144,22 +1149,22 @@ function ENT:SetSuspension( index , bIsDamaged )
 		[5] = self.RearHeight + self.VehicleData.suspensiontravel_rl * -h_mod,
 		[6] = self.RearHeight + self.VehicleData.suspensiontravel_rr * -h_mod
 	}
-	local Wheel = self.Wheels[index]
-	if not IsValid(Wheel) then return end
+	local wheel = self.Wheels[index]
+	if not IsValid(wheel) then return end
 
-	local subRadius = bIsDamaged and Wheel.dRadius or 0
+	local subRadius = bIsDamaged and wheel.dRadius or 0
 
 	local newheight = heights[index] + subRadius
 
-	local Elastic = self.Elastics[index]
-	if IsValid(Elastic) then
-		Elastic:Fire( "SetSpringLength", newheight )
+	local elastic = self.Elastics[index]
+	if IsValid( elastic ) then
+		elastic:Fire( "SetSpringLength", newheight )
 	end
 
-	if self.StrengthenSuspension == true then
-		local Elastic2 = self.Elastics[index * 10]
-		if IsValid(Elastic2) then
-			Elastic2:Fire( "SetSpringLength", newheight )
+	if self.StrengthenSuspension then
+		local elastic2 = self.Elastics[index * 10]
+		if IsValid( elastic2 ) then
+			elastic2:Fire( "SetSpringLength", newheight )
 		end
 	end
 end
@@ -1169,34 +1174,32 @@ function ENT:OnFrontSuspensionHeightChanged( name, old, new )
 	if not self.CustomWheels and new > 0 then new = 0 end
 	if not self:IsInitialized() then return end
 
-	if IsValid(self.Wheels[1]) then
-		local Elastic = self.Elastics[1]
-		if IsValid(Elastic) then
-			Elastic:Fire( "SetSpringLength", self.FrontHeight + self.VehicleData.suspensiontravel_fl * -new )
+	if IsValid( self.Wheels[1] ) then
+		local elastic = self.Elastics[1]
+		if IsValid( elastic ) then
+			elastic:Fire( "SetSpringLength", self.FrontHeight + self.VehicleData.suspensiontravel_fl * -new )
 		end
 
-		if self.StrengthenSuspension == true then
+		if self.StrengthenSuspension then
+			local elastic2 = self.Elastics[10]
 
-			local Elastic2 = self.Elastics[10]
-
-			if IsValid(Elastic2) then
-				Elastic2:Fire( "SetSpringLength", self.FrontHeight + self.VehicleData.suspensiontravel_fl * -new )
+			if IsValid( elastic2 ) then
+				elastic2:Fire( "SetSpringLength", self.FrontHeight + self.VehicleData.suspensiontravel_fl * -new )
 			end
 		end
 	end
 
-	if IsValid(self.Wheels[2]) then
-		local Elastic = self.Elastics[2]
-		if IsValid(Elastic) then
-			Elastic:Fire( "SetSpringLength", self.FrontHeight + self.VehicleData.suspensiontravel_fr * -new )
+	if IsValid( self.Wheels[2 ]) then
+		local elastic = self.Elastics[2]
+		if IsValid( elastic ) then
+			elastic:Fire( "SetSpringLength", self.FrontHeight + self.VehicleData.suspensiontravel_fr * -new )
 		end
 
-		if self.StrengthenSuspension == true then
+		if self.StrengthenSuspension then
+			local elastic2 = self.Elastics[20]
 
-			local Elastic2 = self.Elastics[20]
-
-			if (IsValid(Elastic2)) then
-				Elastic2:Fire( "SetSpringLength", self.FrontHeight + self.VehicleData.suspensiontravel_fr * -new )
+			if IsValid( elastic2 ) then
+				elastic2:Fire( "SetSpringLength", self.FrontHeight + self.VehicleData.suspensiontravel_fr * -new )
 			end
 		end
 	end
@@ -1207,66 +1210,62 @@ function ENT:OnRearSuspensionHeightChanged( name, old, new )
 	if not self.CustomWheels and new > 0 then new = 0 end
 	if not self:IsInitialized() then return end
 
-	if IsValid(self.Wheels[3]) then
-		local Elastic = self.Elastics[3]
-		if IsValid(Elastic) then
-			Elastic:Fire( "SetSpringLength", self.RearHeight + self.VehicleData.suspensiontravel_rl * -new )
+	if IsValid( self.Wheels[3] ) then
+		local elastic = self.Elastics[3]
+		if IsValid( elastic ) then
+			elastic:Fire( "SetSpringLength", self.RearHeight + self.VehicleData.suspensiontravel_rl * -new )
 		end
 
-		if self.StrengthenSuspension == true then
+		if self.StrengthenSuspension then
+			local elastic2 = self.Elastics[30]
 
-			local Elastic2 = self.Elastics[30]
-
-			if IsValid(Elastic2) then
-				Elastic2:Fire( "SetSpringLength", self.RearHeight + self.VehicleData.suspensiontravel_rl * -new )
+			if IsValid( elastic2 ) then
+				elastic2:Fire( "SetSpringLength", self.RearHeight + self.VehicleData.suspensiontravel_rl * -new )
 			end
 		end
 	end
 
-	if IsValid(self.Wheels[4]) then
-		local Elastic = self.Elastics[4]
-		if IsValid(Elastic) then
-			Elastic:Fire( "SetSpringLength", self.RearHeight + self.VehicleData.suspensiontravel_rr * -new )
+	if IsValid( self.Wheels[4] ) then
+		local elastic = self.Elastics[4]
+		if IsValid( elastic ) then
+			elastic:Fire( "SetSpringLength", self.RearHeight + self.VehicleData.suspensiontravel_rr * -new )
 		end
 
-		if self.StrengthenSuspension == true then
+		if self.StrengthenSuspension then
+			local elastic2 = self.Elastics[40]
 
-			local Elastic2 = self.Elastics[40]
-
-			if IsValid(Elastic2) then
-				Elastic2:Fire( "SetSpringLength", self.RearHeight + self.VehicleData.suspensiontravel_rr * -new )
+			if IsValid( elastic2 ) then
+				elastic2:Fire( "SetSpringLength", self.RearHeight + self.VehicleData.suspensiontravel_rr * -new )
 			end
 		end
 	end
 
-	if IsValid(self.Wheels[5]) then
-		local Elastic = self.Elastics[5]
-		if IsValid(Elastic) then
-			Elastic:Fire( "SetSpringLength", self.RearHeight + self.VehicleData.suspensiontravel_rl * -new )
+	if IsValid( self.Wheels[5] ) then
+		local elastic = self.Elastics[5]
+		if IsValid( elastic ) then
+			elastic:Fire( "SetSpringLength", self.RearHeight + self.VehicleData.suspensiontravel_rl * -new )
 		end
 
-		if self.StrengthenSuspension == true then
+		if self.StrengthenSuspension then
+			local elastic2 = self.Elastics[50]
 
-			local Elastic2 = self.Elastics[50]
-
-			if IsValid(Elastic2) then
-				Elastic2:Fire( "SetSpringLength", self.RearHeight + self.VehicleData.suspensiontravel_rl * -new )
+			if IsValid( elastic2 ) then
+				elastic2:Fire( "SetSpringLength", self.RearHeight + self.VehicleData.suspensiontravel_rl * -new )
 			end
 		end
 	end
 
-	if IsValid(self.Wheels[6]) then
-		local Elastic = self.Elastics[6]
-		if IsValid(Elastic) then
-			Elastic:Fire( "SetSpringLength", self.RearHeight + self.VehicleData.suspensiontravel_rr * -new )
+	if IsValid( self.Wheels[6] ) then
+		local elastic = self.Elastics[6]
+		if IsValid( elastic ) then
+			elastic:Fire( "SetSpringLength", self.RearHeight + self.VehicleData.suspensiontravel_rr * -new )
 		end
 
-		if self.StrengthenSuspension == true then
+		if self.StrengthenSuspension then
+			local elastic2 = self.Elastics[60]
 
-			local Elastic2 = self.Elastics[60]
-
-			if IsValid(Elastic2) then
-				Elastic2:Fire( "SetSpringLength", self.RearHeight + self.VehicleData.suspensiontravel_rr * -new )
+			if IsValid( elastic2 ) then
+				elastic2:Fire( "SetSpringLength", self.RearHeight + self.VehicleData.suspensiontravel_rr * -new )
 			end
 		end
 	end
@@ -1276,15 +1275,12 @@ function ENT:OnTurboCharged( name, old, new )
 	if old == new then return end
 	local Active = self:GetActive()
 
-	if new == true and Active then
+	if new and Active then
 		self.Turbo:Stop()
-		self.Turbo = CreateSound(self, self.snd_spool or "simulated_vehicles/turbo_spin.wav")
-		self.Turbo:PlayEx(0,0)
-
-	elseif new == false then
-		if self.Turbo then
-			self.Turbo:Stop()
-		end
+		self.Turbo = CreateSound( self, self.snd_spool or "simulated_vehicles/turbo_spin.wav" )
+		self.Turbo:PlayEx( 0, 0 )
+	elseif not new and self.Turbo then
+		self.Turbo:Stop()
 	end
 end
 
@@ -1292,16 +1288,16 @@ function ENT:OnSuperCharged( name, old, new )
 	if old == new then return end
 	local Active = self:GetActive()
 
-	if new == true and Active then
+	if new and Active then
 		self.Blower:Stop()
 		self.BlowerWhine:Stop()
 
-		self.Blower = CreateSound(self, self.snd_bloweroff or "simulated_vehicles/blower_spin.wav")
-		self.BlowerWhine = CreateSound(self, self.snd_bloweron or "simulated_vehicles/blower_gearwhine.wav")
+		self.Blower = CreateSound( self, self.snd_bloweroff or "simulated_vehicles/blower_spin.wav" )
+		self.BlowerWhine = CreateSound( self, self.snd_bloweron or "simulated_vehicles/blower_gearwhine.wav" )
 
-		self.Blower:PlayEx(0,0)
-		self.BlowerWhine:PlayEx(0,0)
-	elseif new == false then
+		self.Blower:PlayEx( 0, 0 )
+		self.BlowerWhine:PlayEx( 0, 0 )
+	elseif not new then
 		if self.Blower then
 			self.Blower:Stop()
 		end
@@ -1313,15 +1309,15 @@ end
 
 function ENT:OnRemove()
 	if self.Wheels then
-		for i = 1, table.Count( self.Wheels ) do
-			local Ent = self.Wheels[ i ]
+		for i = 1, #self.Wheels do
+			local Ent = self.Wheels[i]
 			if IsValid(Ent) then
 				Ent:Remove()
 			end
 		end
 	end
 	if self.keys then
-		for i = 1, table.Count( self.keys ) do
+		for i = 1, #self.keys do
 			numpad.Remove( self.keys[i] )
 		end
 	end
@@ -1384,7 +1380,7 @@ function ENT:SetMaxFuel( nFuel )
 end
 
 function ENT:SetFuel( nFuel )
-	self:SetNWFloat( "Fuel", math.Clamp( nFuel,0,self:GetMaxFuel() ) )
+	self:SetNWFloat( "Fuel", math.Clamp( nFuel, 0, self:GetMaxFuel() ) )
 end
 
 function ENT:SetFuelUse( nFuel )
