@@ -1,38 +1,39 @@
 AddCSLuaFile()
 
-SWEP.Category			= "simfphys"
-SWEP.Spawnable			= true
-SWEP.AdminSpawnable		= false
-SWEP.ViewModel			= "models/weapons/c_physcannon.mdl"
-SWEP.WorldModel		= "models/weapons/w_physics.mdl"
+SWEP.Category = "simfphys"
+SWEP.Spawnable = true
+SWEP.AdminSpawnable = false
+SWEP.ViewModel = "models/weapons/c_physcannon.mdl"
+SWEP.WorldModel = "models/weapons/w_physics.mdl"
 SWEP.UseHands = true
-SWEP.ViewModelFlip		= false
-SWEP.ViewModelFOV		= 53
-SWEP.Weight 			= 42
-SWEP.AutoSwitchTo 		= true
-SWEP.AutoSwitchFrom 		= true
-SWEP.HoldType			= "physgun"
+SWEP.ViewModelFlip = false
+SWEP.ViewModelFOV = 53
+SWEP.Weight = 42
+SWEP.AutoSwitchTo = true
+SWEP.AutoSwitchFrom = true
 
-SWEP.Primary.ClipSize		= -1
-SWEP.Primary.DefaultClip	= -1
-SWEP.Primary.Automatic	= true
-SWEP.Primary.Ammo		= "none"
+SWEP.HoldType = "physgun"
+
+SWEP.Primary.ClipSize = -1
+SWEP.Primary.DefaultClip = -1
+SWEP.Primary.Automatic = true
+SWEP.Primary.Ammo = "none"
 
 SWEP.Secondary.ClipSize	= -1
-SWEP.Secondary.DefaultClip	= -1
-SWEP.Secondary.Automatic	= false
-SWEP.Secondary.Ammo		= "none"
+SWEP.Secondary.DefaultClip = -1
+SWEP.Secondary.Automatic = false
+SWEP.Secondary.Ammo	= "none"
 
-if (CLIENT) then
-	SWEP.PrintName			= "Vehicle Repair Tool"
-	SWEP.Purpose			= "repairs simfphys vehicles"
-	SWEP.Instructions		= "Primary to repair"
-	SWEP.Author			= "Blu"
-	SWEP.Slot			= 1
-	SWEP.SlotPos			= 9
-	SWEP.IconLetter			= "k"
+if CLIENT then
+	SWEP.PrintName = "Vehicle Repair Tool"
+	SWEP.Purpose = "repairs simfphys vehicles"
+	SWEP.Instructions = "Primary to repair"
+	SWEP.Author	= "Blu"
+	SWEP.Slot = 1
+	SWEP.SlotPos = 9
+	SWEP.IconLetter = "k"
 
-	SWEP.WepSelectIcon 			= surface.GetTextureID( "weapons/s_repair" )
+	SWEP.WepSelectIcon = surface.GetTextureID( "weapons/s_repair" )
 	--SWEP.DrawWeaponInfoBox 	= false
 end
 
@@ -59,64 +60,61 @@ function SWEP:PrimaryAttack()
 	local IsWheel = class == "gmod_sent_vehicle_fphysics_wheel"
 
 	if IsVehicle then
-		local Dist = (Trace.HitPos - Owner:GetPos()):Length()
+		local Dist = ( Trace.HitPos - Owner:GetPos() ):Length()
+		if Dist > 100 then return end
+		self:SendWeaponAnim( ACT_VM_PRIMARYATTACK )
+		Owner:SetAnimation( PLAYER_ATTACK1 )
 
-		if (Dist <= 100) then
-			self:SendWeaponAnim( ACT_VM_PRIMARYATTACK )
-			Owner:SetAnimation( PLAYER_ATTACK1 )
+		if SERVER then
+			local MaxHealth = ent:GetMaxHealth()
+			local Health = ent:GetCurHealth()
 
-			if (SERVER) then
-				local MaxHealth = ent:GetMaxHealth()
-				local Health = ent:GetCurHealth()
+			if Health < MaxHealth then
+				local NewHealth = math.min( Health + 150, MaxHealth )
 
-				if Health < MaxHealth then
-					local NewHealth = math.min( Health + 150, MaxHealth )
+				if NewHealth > (MaxHealth * 0.6) then
+					ent:SetOnFire( false )
+					ent:SetOnSmoke( false )
+				end
 
-					if NewHealth > (MaxHealth * 0.6) then
-						ent:SetOnFire( false )
-						ent:SetOnSmoke( false )
+				if NewHealth > (MaxHealth * 0.3) then
+					ent:SetOnFire( false )
+					if NewHealth <= (MaxHealth * 0.6) then
+						ent:SetOnSmoke( true )
 					end
+				end
 
-					if NewHealth > (MaxHealth * 0.3) then
-						ent:SetOnFire( false )
-						if NewHealth <= (MaxHealth * 0.6) then
-							ent:SetOnSmoke( true )
-						end
-					end
+				ent:SetCurHealth( NewHealth )
 
-					ent:SetCurHealth( NewHealth )
+				local effect = ents.Create( "env_spark" )
+				effect:SetKeyValue( "targetname", "target" )
+				effect:SetPos( Trace.HitPos + Trace.HitNormal * 2 )
+				effect:SetAngles( Trace.HitNormal:Angle() )
+				effect:Spawn()
+				effect:SetKeyValue( "spawnflags", "128" )
+				effect:SetKeyValue( "Magnitude", 1 )
+				effect:SetKeyValue( "TrailLength", 0.2 )
+				effect:Fire( "SparkOnce" )
+				effect:Fire( "kill", "", 0.08 )
+			else
+				self:SetNextPrimaryFire( CurTime() + 0.5 )
 
-					local effect = ents.Create("env_spark")
-						effect:SetKeyValue("targetname", "target")
-						effect:SetPos( Trace.HitPos + Trace.HitNormal * 2 )
-						effect:SetAngles( Trace.HitNormal:Angle() )
-						effect:Spawn()
-						effect:SetKeyValue("spawnflags","128")
-						effect:SetKeyValue("Magnitude",1)
-						effect:SetKeyValue("TrailLength",0.2)
-						effect:Fire( "SparkOnce" )
-						effect:Fire("kill","",0.08)
-				else
-					self:SetNextPrimaryFire( CurTime() + 0.5 )
+				sound.Play( Sound( "hl1/fvox/beep.wav" ), self:GetPos(), 75 )
 
-					sound.Play(Sound( "hl1/fvox/beep.wav" ), self:GetPos(), 75)
+				net.Start( "simfphys_lightsfixall" )
+					net.WriteEntity( ent )
+				net.Broadcast()
 
-					net.Start( "simfphys_lightsfixall" )
-						net.WriteEntity( ent )
-					net.Broadcast()
+				ent:OnRepaired()
 
-					ent:OnRepaired()
+				hook.Run( "simfphysOnRepaired", ent )
 
-					hook.Run( "simfphysOnRepaired", ent )
+				if not ent.Wheels then return end
+				for i = 1, #ent.Wheels do
+					local wheel = ent.Wheels[i]
+					if not IsValid( wheel ) then continue end
 
-					if istable(ent.Wheels) then
-						for i = 1, #ent.Wheels do
-							local Wheel = ent.Wheels[ i ]
-							if IsValid(Wheel) then
-								Wheel:SetDamaged( false )
-							end
-						end
-					end
+					wheel:SetDamaged( false )
 				end
 			end
 		end
