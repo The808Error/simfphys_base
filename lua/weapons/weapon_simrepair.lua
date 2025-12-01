@@ -72,17 +72,18 @@ function SWEP:PrimaryAttack()
 			if Health < MaxHealth then
 				local NewHealth = math.min( Health + 150, MaxHealth )
 
-				if NewHealth > (MaxHealth * 0.6) then
+				if NewHealth > MaxHealth * 0.6 then
 					ent:SetOnFire( false )
 					ent:SetOnSmoke( false )
 				end
 
-				if NewHealth > (MaxHealth * 0.3) then
+				if NewHealth > MaxHealth * 0.3 then
 					ent:SetOnFire( false )
-					if NewHealth <= (MaxHealth * 0.6) then
+					if NewHealth <= MaxHealth * 0.6 then
 						ent:SetOnSmoke( true )
 					end
 				end
+
 
 				ent:SetCurHealth( NewHealth )
 

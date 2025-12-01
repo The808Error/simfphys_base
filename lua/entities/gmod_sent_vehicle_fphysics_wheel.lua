@@ -1,8 +1,8 @@
 AddCSLuaFile()
 
-ENT.Type            = "anim"
+ENT.Type = "anim"
 
-ENT.Spawnable       = false
+ENT.Spawnable = false
 ENT.AdminSpawnable  = false
 ENT.DoNotDuplicate = true
 
