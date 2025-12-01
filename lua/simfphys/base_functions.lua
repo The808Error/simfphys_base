@@ -287,7 +287,7 @@ if SERVER then
 
 			if Ent.ModelInfo then
 				if Ent.ModelInfo.Bodygroups then
-					for i = 1, table.Count( Ent.ModelInfo.Bodygroups ) do
+					for i = 1, #Ent.ModelInfo.Bodygroups do
 						Ent:SetBodygroup(i, Ent.ModelInfo.Bodygroups[i] )
 					end
 				end

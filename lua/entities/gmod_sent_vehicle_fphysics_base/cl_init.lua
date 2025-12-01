@@ -91,7 +91,7 @@ function ENT:SetPoseParameters( curtime )
 		end
 	else
 		if not selfTable.CustomWheels then
-			for i = 1, table.Count( selfTable.pp_data ) do
+			for i = 1, #selfTable.pp_data do
 				local Wheel = selfTable.pp_data[i].entity
 
 				if IsValid( Wheel ) then
@@ -453,7 +453,7 @@ function ENT:Backfire( damaged )
 
 	local expos = self.ExhaustPositions
 
-	for i = 1, table.Count( expos ) do
+	for i = 1, #expos do
 		if math.random(1,3) >= 2 or damaged then
 			local Pos = expos[i].pos
 			local Ang = expos[i].ang - Angle(90,0,0)

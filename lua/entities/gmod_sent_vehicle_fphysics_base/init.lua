@@ -6,6 +6,8 @@ include("simfunc.lua")
 include("numpads.lua")
 include("damage.lua")
 
+local IsValid = IsValid
+
 local function EntityLookup( createdEntities )
 	return function( id, default )
 		if id == nil then return default end
@@ -600,7 +602,7 @@ function ENT:SetupControls( ply )
 	self:ResetJoystick()
 
 	if self.keys then
-		for i = 1, table.Count( self.keys ) do
+		for i = 1, #self.keys do
 			numpad.Remove( self.keys[i] )
 		end
 	end
@@ -978,7 +980,7 @@ function ENT:EnteringSequence( ply )
 			end
 		end
 	else
-		for i = 1, table.Count( self.Enterpoints ) do
+		for i = 1, #self.Enterpoints do
 			local a_ = self.Enterpoints[ i ]
 
 			local a_pos = self:GetAttachment( self:LookupAttachment( a_ ) ).Pos

@@ -7,7 +7,7 @@ local function ExitUsingMyTraces( ent, ply, b_ent )
 	local Filter1 = {ent,ply}
 	local Filter2 = {ent,ply,b_ent}
 
-	for i = 1, table.Count( b_ent.Wheels ) do
+	for i = 1, #b_ent.Wheels do
 		table.insert(Filter1, b_ent.Wheels[i])
 		table.insert(Filter2, b_ent.Wheels[i])
 	end
@@ -121,8 +121,8 @@ local function ExitUsingAttachments( ent, ply, b_ent )
 	local Filter = {ent,ply,b_ent}
 	local LinkedDoorAnims = istable(b_ent.ModelInfo) and istable(b_ent.ModelInfo.LinkDoorAnims)
 
-	for i = 1, table.Count( b_ent.Wheels ) do
-		table.insert(Filter, b_ent.Wheels[i])
+	for i = 1, #b_ent.Wheels do
+		table.insert( Filter, b_ent.Wheels[i] )
 	end
 
 	local IsDriverSeat = ent == b_ent:GetDriverSeat()
@@ -158,7 +158,7 @@ local function ExitUsingAttachments( ent, ply, b_ent )
 				end
 			end
 		else
-			for i = 1, table.Count( b_ent.Exitpoints ) do
+			for i = 1, #b_ent.Exitpoints do
 				local seq_att = b_ent.Exitpoints[i]
 				local attachmentdata = b_ent:GetAttachment( b_ent:LookupAttachment( seq_att ) )
 				if attachmentdata then

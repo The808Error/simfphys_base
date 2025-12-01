@@ -62,7 +62,7 @@ function ENT:HurtPlayers( damage )
 
 	if not istable( self.PassengerSeats ) then return end
 
-	for i = 1, table.Count( self.PassengerSeats ) do
+	for i = 1, #self.PassengerSeats do
 		local seat = self.pSeat[i]
 		if not IsValid( seat ) then continue end
 
@@ -104,7 +104,7 @@ function ENT:ExplodeVehicle()
 	end
 
 	if self.PassengerSeats then
-		for i = 1, table.Count( self.PassengerSeats ) do
+		for i = 1, #self.PassengerSeats do
 			local Passenger = self.pSeat[i]:GetDriver()
 			if IsValid( Passenger ) then
 				local dmginfo = DamageInfo()
@@ -149,7 +149,7 @@ function ENT:ExplodeVehicle()
 		end
 
 		bprop.Gibs = {}
-		for i = 2, table.Count( self.GibModels ) do
+		for i = 2, #self.GibModels do
 			local prop = ents.Create( "gmod_sent_vehicle_fphysics_gib" )
 			prop:SetModel( self.GibModels[i] )
 			prop:SetPos( self:GetPos() )
@@ -203,7 +203,7 @@ function ENT:ExplodeVehicle()
 
 		if self.CustomWheels == true and not self.NoWheelGibs then
 			bprop.Wheels = {}
-			for i = 1, table.Count( self.GhostWheels ) do
+			for i = 1, #self.GhostWheels do
 				local Wheel = self.GhostWheels[i]
 				if IsValid( Wheel ) then
 					local prop = ents.Create( "gmod_sent_vehicle_fphysics_gib" )

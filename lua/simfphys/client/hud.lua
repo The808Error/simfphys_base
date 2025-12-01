@@ -718,7 +718,7 @@ hook.Add( "HUDPaint", "simfphys_HUD", function()
 	end
 
 	local pSeats = vehiclebase:GetPassengerSeats()
-	local SeatCount = table.Count( pSeats )
+	local SeatCount = #pSeats
 
 	PaintSeatSwitcher( vehiclebase, pSeats, SeatCount )
 

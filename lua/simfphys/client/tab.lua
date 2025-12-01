@@ -294,7 +294,7 @@ local function buildcontrolsmenu( self )
 
 	local yy = 45
 	local binders = {}
-	for i = 1, table.Count( k_list ) do
+	for i = 1, #k_list do
 		binders[i] = simplebinder(25,yy,k_list,i,self.PropPanel)
 		yy = yy + 45
 	end
@@ -305,7 +305,7 @@ local function buildcontrolsmenu( self )
 	ResetButton:SetPos( 25, yy + 10 )
 	ResetButton:SetSize( 500, 25 )
 	ResetButton.DoClick = function()
-		for i = 1, table.Count( binders ) do
+		for i = 1, #binders do
 			local kentry = k_list[i]
 			local key = kentry[1]
 			local default = kentry[2]

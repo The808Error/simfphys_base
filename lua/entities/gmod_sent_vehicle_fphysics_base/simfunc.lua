@@ -1,10 +1,13 @@
+local IsValid = IsValid
+
+
 function ENT:WheelOnGround()
 	self.FrontWheelPowered = self:GetPowerDistribution() ~= 1
 	self.RearWheelPowered = self:GetPowerDistribution() ~= -1
 
-	for i = 1, table.Count( self.Wheels ) do
+	for i = 1, #self.Wheels do
 		local Wheel = self.Wheels[i]
-		if IsValid(Wheel) then
+		if IsValid( Wheel ) then
 			local dmgMul = Wheel:GetDamaged() and 0.5 or 1
 			local surfacemul = simfphys.TractionData[Wheel:GetSurfaceMaterial():lower()]
 
@@ -321,116 +324,115 @@ function ENT:SimulateWheels(k_clutch,LimitRPM)
 	local Efficiency = self:GetEfficiency()
 	local GripOffset = self:GetTractionBias() * MaxGrip
 
-	for i = 1, table.Count( selfTbl.Wheels ) do
+	for i = 1, #selfTbl.Wheels do
 		local Wheel = selfTbl.Wheels[i]
+		if not IsValid( Wheel ) then continue end
 
-		if IsValid( Wheel ) then
-			local WheelPos = self:LogicWheelPos( i )
-			local WheelRadius = WheelPos.IsFrontWheel and selfTbl.FrontWheelRadius or selfTbl.RearWheelRadius
-			local WheelDiameter = WheelRadius * 2
-			local SurfaceMultiplicator = selfTbl.VehicleData[ "SurfaceMul_" .. i ]
-			local MaxTraction = (WheelPos.IsFrontWheel and (MaxGrip + GripOffset) or  (MaxGrip - GripOffset)) * SurfaceMultiplicator
+		local WheelPos = self:LogicWheelPos( i )
+		local WheelRadius = WheelPos.IsFrontWheel and selfTbl.FrontWheelRadius or selfTbl.RearWheelRadius
+		local WheelDiameter = WheelRadius * 2
+		local SurfaceMultiplicator = selfTbl.VehicleData[ "SurfaceMul_" .. i ]
+		local MaxTraction = (WheelPos.IsFrontWheel and (MaxGrip + GripOffset) or  (MaxGrip - GripOffset)) * SurfaceMultiplicator
 
-			local IsPoweredWheel = (WheelPos.IsFrontWheel and selfTbl.FrontWheelPowered or not WheelPos.IsFrontWheel and selfTbl.RearWheelPowered) and 1 or 0
+		local IsPoweredWheel = (WheelPos.IsFrontWheel and selfTbl.FrontWheelPowered or not WheelPos.IsFrontWheel and selfTbl.RearWheelPowered) and 1 or 0
 
-			local Velocity = Wheel:GetVelocity()
-			local VelForward = Velocity:GetNormalized()
-			local OnGround = selfTbl.VehicleData[ "onGround_" .. i ]
+		local Velocity = Wheel:GetVelocity()
+		local VelForward = Velocity:GetNormalized()
+		local OnGround = selfTbl.VehicleData[ "onGround_" .. i ]
 
-			local Forward = WheelPos.IsFrontWheel and Steer.Forward or selfTbl.Forward
-			local Right = WheelPos.IsFrontWheel and Steer.Right or selfTbl.Right
+		local Forward = WheelPos.IsFrontWheel and Steer.Forward or selfTbl.Forward
+		local Right = WheelPos.IsFrontWheel and Steer.Right or selfTbl.Right
 
-			if selfTbl.CustomWheels then
-				if WheelPos.IsFrontWheel then
-					Forward = IsValid(selfTbl.SteerMaster) and Steer.Forward or selfTbl.Forward
-					Right = IsValid(selfTbl.SteerMaster) and Steer.Right or selfTbl.Right
-				else
-					if IsValid( selfTbl.SteerMaster2 ) then
-						Forward = Steer.Forward2
-						Right = Steer.Right2
-					end
-				end
-			end
-
-			local Ax = math.deg( math.acos( math.Clamp( Forward:Dot(VelForward) ,-1,1) ) )
-			local Ay = math.deg( math.asin( math.Clamp( Right:Dot(VelForward) ,-1,1) ) )
-
-			local Fx = math.cos( math.rad( Ax ) ) * Velocity:Length()
-			local Fy = math.sin( math.rad( Ay ) ) * Velocity:Length()
-
-			local absFy = math.abs(Fy)
-			local absFx = math.abs(Fx)
-
-			local PowerBiasMul = WheelPos.IsFrontWheel and (1 - self:GetPowerDistribution()) * 0.5 or (1 + self:GetPowerDistribution()) * 0.5
-			local BrakeForce = math.Clamp(-Fx,-selfTbl.Brake,selfTbl.Brake) * SurfaceMultiplicator
-
-			local TorqueConv = selfTbl.EngineTorque * PowerBiasMul * IsPoweredWheel
-			local ForwardForce = TorqueConv + (not WheelPos.IsFrontWheel and math.Clamp(-Fx,-selfTbl.HandBrake,selfTbl.HandBrake) or 0) + BrakeForce * 0.5
-
-			local TractionCycle = Vector(math.min(absFy,MaxTraction),ForwardForce,0):Length()
-
-			local GripLoss = math.max(TractionCycle - MaxTraction,0)
-			local GripRemaining = math.max(MaxTraction - GripLoss,math.min(absFy / 25,MaxTraction))
-			--local GripRemaining = math.max(MaxTraction - GripLoss,math.min(absFy / 25,MaxTraction / 2))
-
-			local signForwardForce = ((ForwardForce > 0) and 1 or 0) + ((ForwardForce < 0) and -1 or 0)
-			local signEngineTorque = ((selfTbl.EngineTorque > 0) and 1 or 0) + ((selfTbl.EngineTorque < 0) and -1 or 0)
-
-			local Power = ForwardForce * Efficiency - GripLoss * signForwardForce + math.Clamp(BrakeForce * 0.5,-MaxTraction,MaxTraction)
-
-			local Force = -Right * math.Clamp(Fy,-GripRemaining,GripRemaining) + Forward * Power
-
-			local wRad = Wheel:GetDamaged() and Wheel.dRadius or WheelRadius
-			local TurnWheel = ((Fx + GripLoss * 35 * signEngineTorque * IsPoweredWheel) / wRad * 1.85) + selfTbl.EngineRPM / 80 * (1 - OnGround) * IsPoweredWheel * (1 - k_clutch)
-
-			Wheel.FX = Fx
-			Wheel.skid = ((MaxTraction - (MaxTraction - Vector(absFy,math.abs(ForwardForce * 10),0):Length())) / MaxTraction) - 10
-
-			local RPM = (absFx / (3.14 * WheelDiameter)) * 52 * OnGround
-			local GripLossFaktor = math.Clamp(GripLoss,0,MaxTraction) / MaxTraction
-
-			selfTbl.VehicleData[ "WheelRPM_".. i ] = RPM
-			selfTbl.VehicleData[ "GripLossFaktor_".. i ] = GripLossFaktor
-			selfTbl.VehicleData[ "Exp_GLF_".. i ] = GripLossFaktor ^ 2
-			Wheel:SetGripLoss( GripLossFaktor )
-
-			local WheelOPow = math.abs( selfTbl.CurrentGear == 1 and math.min( TorqueConv, 0 ) or math.max( TorqueConv, 0 ) ) > 0
-			local FrontWheelCanTurn = (WheelOPow and 0 or selfTbl.Brake) < MaxTraction * 1.75
-			local RearWheelCanTurn = (selfTbl.HandBrake < MaxTraction) and (WheelOPow and 0 or selfTbl.Brake) < MaxTraction * 2
-
+		if selfTbl.CustomWheels then
 			if WheelPos.IsFrontWheel then
-				if FrontWheelCanTurn then
-					selfTbl.VehicleData[ "spin_" .. i ] = selfTbl.VehicleData[ "spin_" .. i ] + TurnWheel
-				end
+				Forward = IsValid(selfTbl.SteerMaster) and Steer.Forward or selfTbl.Forward
+				Right = IsValid(selfTbl.SteerMaster) and Steer.Right or selfTbl.Right
 			else
-				if RearWheelCanTurn then
-					selfTbl.VehicleData[ "spin_" .. i ] = selfTbl.VehicleData[ "spin_" .. i ] + TurnWheel
+				if IsValid( selfTbl.SteerMaster2 ) then
+					Forward = Steer.Forward2
+					Right = Steer.Right2
 				end
 			end
+		end
 
-			if selfTbl.CustomWheels then
-				local GhostEnt = selfTbl.GhostWheels[i]
-				if IsValid( GhostEnt ) then
-					local Angle = GhostEnt:GetAngles()
-					local offsetang = WheelPos.IsFrontWheel and selfTbl.CustomWheelAngleOffset or (selfTbl.CustomWheelAngleOffset_R or selfTbl.CustomWheelAngleOffset)
-					local Direction = GhostEnt:LocalToWorldAngles( offsetang ):Forward()
-					local TFront = FrontWheelCanTurn and TurnWheel or 0
-					local TBack = RearWheelCanTurn and TurnWheel or 0
+		local Ax = math.deg( math.acos( math.Clamp( Forward:Dot(VelForward) ,-1,1) ) )
+		local Ay = math.deg( math.asin( math.Clamp( Right:Dot(VelForward) ,-1,1) ) )
 
-					local AngleStep = WheelPos.IsFrontWheel and TFront or TBack
-					Angle:RotateAroundAxis(Direction, WheelPos.IsRightWheel and AngleStep or -AngleStep)
+		local Fx = math.cos( math.rad( Ax ) ) * Velocity:Length()
+		local Fy = math.sin( math.rad( Ay ) ) * Velocity:Length()
 
-					selfTbl.GhostWheels[i]:SetAngles( Angle )
-				end
-			else
-				self:SetPoseParameter(selfTbl.VehicleData[ "pp_spin_" .. i ],selfTbl.VehicleData[ "spin_" .. i ])
+		local absFy = math.abs(Fy)
+		local absFx = math.abs(Fx)
+
+		local PowerBiasMul = WheelPos.IsFrontWheel and (1 - self:GetPowerDistribution()) * 0.5 or (1 + self:GetPowerDistribution()) * 0.5
+		local BrakeForce = math.Clamp(-Fx,-selfTbl.Brake,selfTbl.Brake) * SurfaceMultiplicator
+
+		local TorqueConv = selfTbl.EngineTorque * PowerBiasMul * IsPoweredWheel
+		local ForwardForce = TorqueConv + (not WheelPos.IsFrontWheel and math.Clamp(-Fx,-selfTbl.HandBrake,selfTbl.HandBrake) or 0) + BrakeForce * 0.5
+
+		local TractionCycle = Vector(math.min(absFy,MaxTraction),ForwardForce,0):Length()
+
+		local GripLoss = math.max(TractionCycle - MaxTraction,0)
+		local GripRemaining = math.max(MaxTraction - GripLoss,math.min(absFy / 25,MaxTraction))
+		--local GripRemaining = math.max(MaxTraction - GripLoss,math.min(absFy / 25,MaxTraction / 2))
+
+		local signForwardForce = ((ForwardForce > 0) and 1 or 0) + ((ForwardForce < 0) and -1 or 0)
+		local signEngineTorque = ((selfTbl.EngineTorque > 0) and 1 or 0) + ((selfTbl.EngineTorque < 0) and -1 or 0)
+
+		local Power = ForwardForce * Efficiency - GripLoss * signForwardForce + math.Clamp(BrakeForce * 0.5,-MaxTraction,MaxTraction)
+
+		local Force = -Right * math.Clamp(Fy,-GripRemaining,GripRemaining) + Forward * Power
+
+		local wRad = Wheel:GetDamaged() and Wheel.dRadius or WheelRadius
+		local TurnWheel = ((Fx + GripLoss * 35 * signEngineTorque * IsPoweredWheel) / wRad * 1.85) + selfTbl.EngineRPM / 80 * (1 - OnGround) * IsPoweredWheel * (1 - k_clutch)
+
+		Wheel.FX = Fx
+		Wheel.skid = ((MaxTraction - (MaxTraction - Vector(absFy,math.abs(ForwardForce * 10),0):Length())) / MaxTraction) - 10
+
+		local RPM = (absFx / (3.14 * WheelDiameter)) * 52 * OnGround
+		local GripLossFaktor = math.Clamp(GripLoss,0,MaxTraction) / MaxTraction
+
+		selfTbl.VehicleData[ "WheelRPM_".. i ] = RPM
+		selfTbl.VehicleData[ "GripLossFaktor_".. i ] = GripLossFaktor
+		selfTbl.VehicleData[ "Exp_GLF_".. i ] = GripLossFaktor ^ 2
+		Wheel:SetGripLoss( GripLossFaktor )
+
+		local WheelOPow = math.abs( selfTbl.CurrentGear == 1 and math.min( TorqueConv, 0 ) or math.max( TorqueConv, 0 ) ) > 0
+		local FrontWheelCanTurn = (WheelOPow and 0 or selfTbl.Brake) < MaxTraction * 1.75
+		local RearWheelCanTurn = (selfTbl.HandBrake < MaxTraction) and (WheelOPow and 0 or selfTbl.Brake) < MaxTraction * 2
+
+		if WheelPos.IsFrontWheel then
+			if FrontWheelCanTurn then
+				selfTbl.VehicleData[ "spin_" .. i ] = selfTbl.VehicleData[ "spin_" .. i ] + TurnWheel
 			end
+		else
+			if RearWheelCanTurn then
+				selfTbl.VehicleData[ "spin_" .. i ] = selfTbl.VehicleData[ "spin_" .. i ] + TurnWheel
+			end
+		end
 
-			if not selfTbl.PhysicsEnabled then
-				local phys = Wheel:GetPhysicsObject()
-				if IsValid( phys ) then
-					phys:ApplyForceCenter( Force * 185 * OnGround )
-				end
+		if selfTbl.CustomWheels then
+			local GhostEnt = selfTbl.GhostWheels[i]
+			if IsValid( GhostEnt ) then
+				local Angle = GhostEnt:GetAngles()
+				local offsetang = WheelPos.IsFrontWheel and selfTbl.CustomWheelAngleOffset or (selfTbl.CustomWheelAngleOffset_R or selfTbl.CustomWheelAngleOffset)
+				local Direction = GhostEnt:LocalToWorldAngles( offsetang ):Forward()
+				local TFront = FrontWheelCanTurn and TurnWheel or 0
+				local TBack = RearWheelCanTurn and TurnWheel or 0
+
+				local AngleStep = WheelPos.IsFrontWheel and TFront or TBack
+				Angle:RotateAroundAxis(Direction, WheelPos.IsRightWheel and AngleStep or -AngleStep)
+
+				selfTbl.GhostWheels[i]:SetAngles( Angle )
+			end
+		else
+			self:SetPoseParameter(selfTbl.VehicleData[ "pp_spin_" .. i ],selfTbl.VehicleData[ "spin_" .. i ])
+		end
+
+		if not selfTbl.PhysicsEnabled then
+			local phys = Wheel:GetPhysicsObject()
+			if IsValid( phys ) then
+				phys:ApplyForceCenter( Force * 185 * OnGround )
 			end
 		end
 	end

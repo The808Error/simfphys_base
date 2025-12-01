@@ -1,6 +1,8 @@
 util.AddNetworkString( "simfphys_mousesteer" )
 util.AddNetworkString( "simfphys_blockcontrols" )
 
+local IsValid = IsValid
+
 net.Receive( "simfphys_mousesteer", function( _, ply )
 	if not ply:IsDrivingSimfphys() then return end
 

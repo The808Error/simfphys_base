@@ -110,7 +110,7 @@ function SWEP:PrimaryAttack()
 					hook.Run( "simfphysOnRepaired", ent )
 
 					if istable(ent.Wheels) then
-						for i = 1, table.Count( ent.Wheels ) do
+						for i = 1, #ent.Wheels do
 							local Wheel = ent.Wheels[ i ]
 							if IsValid(Wheel) then
 								Wheel:SetDamaged( false )

@@ -213,7 +213,7 @@ if CLIENT then
 							TOOLMemory[name] = {}
 
 							local submats = string.Explode( ",", variable )
-							for i = 0, (table.Count( submats ) - 1) do
+							for i = 0, ( #submats - 1 ) do
 								TOOLMemory[name][i] = submats[i+1]
 							end
 						else
@@ -393,7 +393,7 @@ function TOOL:GetVehicleData( ent, ply )
 	ply.TOOLMemory.backfiresound = ent:GetBackfireSound()
 
 	ply.TOOLMemory.SubMaterials = {}
-	for i = 0, (table.Count( ent:GetMaterials() ) - 1) do
+	for i = 0, #ent:GetMaterials() - 1 do
 		ply.TOOLMemory.SubMaterials[i] = ent:GetSubMaterial( i )
 	end
 
@@ -426,7 +426,7 @@ local function SetWheelOffset( ent, offset_front, offset_rear )
 
 	if not istable( ent.Wheels ) or not istable( ent.GhostWheels ) then return end
 
-	for i = 1, table.Count( ent.GhostWheels ) do
+	for i = 1, #ent.GhostWheels do
 		local Wheel = ent.Wheels[ i ]
 		local WheelModel = ent.GhostWheels[i]
 		local WheelPos = ent:LogicWheelPos( i )
@@ -455,7 +455,7 @@ local function ApplyWheel(ent, data)
 
 	timer.Simple( 0.05, function()
 		if not IsValid( ent ) then return end
-		for i = 1, table.Count( ent.GhostWheels ) do
+		for i = 1, #ent.GhostWheels do
 			local Wheel = ent.GhostWheels[i]
 
 			if IsValid( Wheel ) then
@@ -632,7 +632,7 @@ function TOOL:LeftClick( trace )
 
 		local Gears = {}
 		local Data = string.Explode( ",", ply.TOOLMemory.Gears  )
-		for i = 1, table.Count( Data ) do
+		for i = 1, #Data do
 			local gRatio = tonumber( Data[i] )
 
 			if isnumber( gRatio ) then
@@ -650,7 +650,7 @@ function TOOL:LeftClick( trace )
 		Ent.Gears = Gears
 
 		if istable( ply.TOOLMemory.SubMaterials ) then
-			for i = 0, table.Count( ply.TOOLMemory.SubMaterials ) do
+			for i = 0, #ply.TOOLMemory.SubMaterials do
 				Ent:SetSubMaterial( i, ply.TOOLMemory.SubMaterials[i] )
 			end
 		end
@@ -672,7 +672,7 @@ function TOOL:LeftClick( trace )
 
 			local elastics = Ent.Elastics
 			if elastics then
-				for i = 1, table.Count( elastics ) do
+				for i = 1, #elastics do
 					local elastic = elastics[i]
 					if Ent.StrengthenSuspension == true then
 						if IsValid( elastic ) then
@@ -698,7 +698,7 @@ function TOOL:LeftClick( trace )
 		Ent:SetRearSuspensionHeight( tonumber( ply.TOOLMemory.RearHeight ) )
 
 		local groups = string.Explode( ",", ply.TOOLMemory.BodyGroups)
-		for i = 1, table.Count( groups ) do
+		for i = 1, #groups do
 			Ent:SetBodygroup(i, tonumber(groups[i]) )
 		end
 
@@ -733,7 +733,7 @@ function TOOL:LeftClick( trace )
 			Ent:SetPos( ResetPos + Vector(0,0,30) )
 			Ent:SetAngles( Angle(0,ResetAng.y,0) )
 
-			for i = 1, table.Count( Ent.Wheels ) do
+			for i = 1, #Ent.Wheels do
 				local Wheel = Ent.Wheels[ i ]
 				if IsValid( Wheel ) then
 					local wPObj = Wheel:GetPhysicsObject()
@@ -759,7 +759,7 @@ function TOOL:LeftClick( trace )
 				Ent:SetPos( ResetPos )
 				Ent:SetAngles( ResetAng )
 
-				for i = 1, table.Count( freezeWheels ) do
+				for i = 1, #freezeWheels do
 					local Wheel = Ent.Wheels[ i ]
 					if IsValid( Wheel ) then
 						local wPObj = Wheel:GetPhysicsObject()

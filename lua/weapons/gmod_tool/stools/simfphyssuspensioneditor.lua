@@ -35,8 +35,8 @@ function TOOL:LeftClick( trace )
 	}
 
 	local elastics = ent.Elastics
-	if (elastics) then
-		for i = 1, table.Count( elastics ) do
+	if elastics then
+		for i = 1, #elastics do
 			local elastic = elastics[i]
 			if (ent.StrengthenSuspension == true) then
 				if (IsValid(elastic)) then
@@ -119,8 +119,8 @@ function TOOL:Reload( trace )
 		}
 
 		local elastics = ent.Elastics
-		if (elastics) then
-			for i = 1, table.Count( elastics ) do
+		if elastics then
+			for i = 1, #elastics do
 				local elastic = elastics[i]
 				if (ent.StrengthenSuspension == true) then
 					if (IsValid(elastic)) then

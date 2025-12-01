@@ -244,7 +244,7 @@ function ENT:InitializeVehicle()
 	end
 
 	if self.Attachments then
-		for i = 1, table.Count( self.Attachments ) do
+		for i = 1, #self.Attachments do
 			local prop = ents.Create( ( self.Attachments[i].IsGlass and "gmod_sent_vehicle_fphysics_attachment_translucent" or "gmod_sent_vehicle_fphysics_attachment") )
 			prop:SetModel( self.Attachments[i].model )
 			prop:SetMaterial( self.Attachments[i].material )
@@ -265,7 +265,7 @@ function ENT:InitializeVehicle()
 			end
 
 			if self.Attachments[i].bodygroups then
-				for b = 1, table.Count( self.Attachments[i].bodygroups ) do
+				for b = 1, #self.Attachments[i].bodygroups do
 					prop:SetBodygroup(b, self.Attachments[i].bodygroups[b] )
 				end
 			end
@@ -612,7 +612,7 @@ function ENT:SetupVehicle()
 	timer.Simple( 0.01, function()
 		if not istable( self.Wheels ) then return end
 
-		for i = 1, table.Count( self.Wheels ) do
+		for i = 1, #self.Wheels do
 			local Ent = self.Wheels[ i ]
 			
 			if IsValid( Ent ) then

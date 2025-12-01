@@ -142,7 +142,7 @@ end
 function ENT:BodyGroupIsValid( bodygroups )
 	for index, groups in pairs( bodygroups ) do
 		local mygroup = self:GetBodygroup( index )
-		for g_index = 1, table.Count( groups ) do
+		for g_index = 1, #groups do
 			if mygroup == groups[g_index] then return true end
 		end
 	end

@@ -33,7 +33,7 @@ Shadows = GetConVar( "cl_simfphys_shadows" ):GetBool()
 local function BodyGroupIsValid( bodygroups, entity )
     for index, groups in pairs( bodygroups ) do
         local mygroup = entity:GetBodygroup( index )
-        for g_index = 1, table.Count( groups ) do
+        for g_index = 1, #groups do
             if (mygroup == groups[g_index]) then return true end
         end
     end
@@ -372,7 +372,7 @@ local function SetUpLights( vname , ent )
 
     if istable(vehiclelist.ems_sprites) then
         ent.PixVisEMS = {}
-        for i = 1, table.Count( vehiclelist.ems_sprites ) do
+        for i = 1, #vehiclelist.ems_sprites do
             ent.PixVisEMS[i] = util.GetPixelVisibleHandle()
 
             ent.LightsEMS[i].material = ent.LightsEMS[i].material and Material( ent.LightsEMS[i].material ) or mat2
@@ -737,7 +737,7 @@ local function DrawEMSLights( ent )
 
     if ent.LightsEMS then
 
-        for i = 1, table.Count( ent.LightsEMS ) do
+        for i = 1, #ent.LightsEMS do
             if not ent.LightsEMS[i].Damaged then
 
                 local size = ent.LightsEMS[i].size
@@ -912,7 +912,7 @@ local function spritedamage( length )
 
     if istable(veh.LightsEMS) then
 
-        for i = 1, table.Count( veh.LightsEMS ) do
+        for i = 1, #veh.LightsEMS do
 
             if not veh.LightsEMS[i].Damaged then
 
@@ -957,7 +957,7 @@ local function spriterepair( length )
     end
 
     if istable( veh.LightsEMS ) then
-        for i = 1, table.Count( veh.LightsEMS ) do
+        for i = 1, #veh.LightsEMS do
             veh.LightsEMS[i].Damaged = false
         end
     end
