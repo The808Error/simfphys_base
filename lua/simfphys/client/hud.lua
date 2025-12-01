@@ -667,8 +667,9 @@ local function PaintSeatSwitcher( ent, pSeats, SeatCount )
 		yPos = y + radius * 1.2 - (SeatCount + 1) * 30 - 10 + hudoffset_y * screenh
 	end
 
-	for _, Pod in pairs( pSeats ) do
+	for _, Pod in ipairs( pSeats ) do
         if not IsValid( Pod ) then continue end
+		
 		local I = Pod:GetNWInt( "pPodIndex", -1 )
 		if I >= 0 then
 			if I == MySeat then
@@ -700,16 +701,22 @@ local function PaintSeatSwitcher( ent, pSeats, SeatCount )
 	end
 end
 
+
+
 hook.Add( "HUDPaint", "simfphys_HUD", function()
 	local ply = LocalPlayer()
+
 	local turnmenu_isopen = false
 
-	if not IsValid( ply ) or ply:Health() <= 0 then turnmenu_wasopen = false return end
+	if not IsValid( ply ) or not ply:Alive() then
+		turnmenu_wasopen = false
+		return
+	end
 
 	local vehicle = ply:GetVehicle()
-	local vehiclebase = ply:GetSimfphys()
+	local vehicleBase = ply:GetSimfphys()
 
-	if not IsValid( vehicle ) or not IsValid( vehiclebase ) then
+	if not IsValid( vehicle ) or not IsValid( vehicleBase ) then
 		ply.oldPassengersmf = {}
 
 		turnmenu_wasopen = false
@@ -717,40 +724,45 @@ hook.Add( "HUDPaint", "simfphys_HUD", function()
 		return
 	end
 
-	local pSeats = vehiclebase:GetPassengerSeats()
+	local pSeats = vehicleBase:GetPassengerSeats()
 	local SeatCount = #pSeats
 
-	PaintSeatSwitcher( vehiclebase, pSeats, SeatCount )
+	PaintSeatSwitcher( vehicleBase, pSeats, SeatCount )
 
-	if not ply:IsDrivingSimfphys() then turnmenu_wasopen = false return end
-
-	drawsimfphysHUD( vehiclebase, SeatCount )
-
-	if vehiclebase.HasTurnSignals and input.IsKeyDown( turnmenu ) then
-		turnmenu_isopen = true
-
-		drawTurnMenu( vehiclebase )
+	if not ply:IsDrivingSimfphys() then
+		turnmenu_wasopen = false
+		return
 	end
 
-	if turnmenu_isopen ~= turnmenu_wasopen then
-		turnmenu_wasopen = turnmenu_isopen
+	drawsimfphysHUD( vehicleBase, SeatCount )
 
-		if turnmenu_isopen then
-			turnmode = 0
+	if vehicleBase.HasTurnSignals and input.IsKeyDown( turnmenu ) then
+		turnmenu_isopen = true
+
+		drawTurnMenu( vehicleBase )
+	end
+
+
+	if turnmenu_isopen == turnmenu_wasopen then return end
+
+	turnmenu_wasopen = turnmenu_isopen
+
+	if turnmenu_isopen then
+		turnmode = 0
+	else
+		net.Start( "simfphys_turnsignal" )
+			net.WriteEntity( vehicleBase )
+			net.WriteInt( turnmode, 3 )
+		net.SendToServer()
+
+		if turnmode == 1 or turnmode == 2 or turnmode == 3 then
+			vehicleBase:EmitSound( "simulated_vehicles/sfx/turnsignal_start.ogg" )
 		else
-			net.Start( "simfphys_turnsignal" )
-				net.WriteEntity( vehiclebase )
-				net.WriteInt( turnmode, 3 )
-			net.SendToServer()
-
-			if turnmode == 1 or turnmode == 2 or turnmode == 3 then
-				vehiclebase:EmitSound( "simulated_vehicles/sfx/turnsignal_start.ogg" )
-			else
-				vehiclebase:EmitSound( "simulated_vehicles/sfx/turnsignal_end.ogg" )
-			end
+			vehicleBase:EmitSound( "simulated_vehicles/sfx/turnsignal_end.ogg" )
 		end
 	end
 end )
+
 
 local tipcol = Color( 0, 127, 255, 255 )
 
