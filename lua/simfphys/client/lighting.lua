@@ -31,12 +31,14 @@ RearProjectedLights = GetConVar( "cl_simfphys_rearlamps" ):GetBool()
 Shadows = GetConVar( "cl_simfphys_shadows" ):GetBool()
 
 local function BodyGroupIsValid( bodygroups, entity )
-    for index, groups in pairs( bodygroups ) do
-        local mygroup = entity:GetBodygroup( index )
-        for g_index = 1, #groups do
-            if (mygroup == groups[g_index]) then return true end
+    for i, groups in ipairs( bodygroups ) do
+        local mygroup = entity:GetBodygroup( i )
+
+        for i2 = 1, #groups do
+            if mygroup == groups[i2] then return true end
         end
     end
+
     return false
 end
 
