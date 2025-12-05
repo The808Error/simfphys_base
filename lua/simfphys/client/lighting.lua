@@ -12,7 +12,7 @@ local SpritesDisabled = false
 local FrontProjectedLights = true
 local RearProjectedLights = true
 local Shadows = false
-local vtable = istable( vtable ) and vtable or {}
+local vtable = {}
 
 local IsValid = IsValid
 
