@@ -52,15 +52,15 @@ local function UpdateSubMats(ent, entTable, Lowbeam, Highbeam, IsBraking, IsReve
 
         if entTable.WasTurningLeft ~= IsTurningLeft or entTable.WasTurningRight ~= IsTurningRight or entTable.WasFlashing ~= IsFlashing then
             if entTable.SubMaterials.turnsignals.left then
-                for k,v in pairs( entTable.SubMaterials.turnsignals.left ) do
+                for i, v in ipairs( entTable.SubMaterials.turnsignals.left ) do
                     local mat = (IsFlashing and IsTurningLeft) and v or ""
-                    ent:SetSubMaterial( k, mat )
+                    ent:SetSubMaterial( i, mat )
                 end
             end
             if entTable.SubMaterials.turnsignals.right then
-                for k,v in pairs( entTable.SubMaterials.turnsignals.right ) do
-                    local mat = (IsFlashing and IsTurningRight) and v or ""
-                    ent:SetSubMaterial( k, mat )
+                for i, v in ipairs( entTable.SubMaterials.turnsignals.right ) do
+                    local mat = ( IsFlashing and IsTurningRight ) and v or ""
+                    ent:SetSubMaterial( i, mat )
                 end
             end
 
@@ -77,28 +77,28 @@ local function UpdateSubMats(ent, entTable, Lowbeam, Highbeam, IsBraking, IsReve
             if entTable.SubMaterials.on_highbeam then
                 if not IsReversing and not IsBraking then
                     if entTable.SubMaterials.on_highbeam.Base then
-                        for k,v in pairs( entTable.SubMaterials.on_highbeam.Base ) do
-                            ent:SetSubMaterial( k, v )
+                        for i, v in ipairs( entTable.SubMaterials.on_highbeam.Base ) do
+                            ent:SetSubMaterial( i, v )
                         end
                     end
                 elseif IsBraking then
                     if IsReversing then
                         if entTable.SubMaterials.on_highbeam.Brake_Reverse then
-                            for k,v in pairs( entTable.SubMaterials.on_highbeam.Brake_Reverse ) do
-                                ent:SetSubMaterial( k, v )
+                            for i, v in ipairs( entTable.SubMaterials.on_highbeam.Brake_Reverse ) do
+                                ent:SetSubMaterial( i, v )
                             end
                         end
                     else
                         if entTable.SubMaterials.on_highbeam.Brake then
-                            for k,v in pairs( entTable.SubMaterials.on_highbeam.Brake ) do
-                                ent:SetSubMaterial( k, v )
+                            for i, v in ipairs( entTable.SubMaterials.on_highbeam.Brake ) do
+                                ent:SetSubMaterial( i, v )
                             end
                         end
                     end
                 else
                     if entTable.SubMaterials.on_highbeam.Reverse then
-                        for k,v in pairs( entTable.SubMaterials.on_highbeam.Reverse ) do
-                            ent:SetSubMaterial( k, v )
+                        for i, v in ipairs( entTable.SubMaterials.on_highbeam.Reverse ) do
+                            ent:SetSubMaterial( i, v )
                         end
                     end
                 end
@@ -107,28 +107,28 @@ local function UpdateSubMats(ent, entTable, Lowbeam, Highbeam, IsBraking, IsReve
             if entTable.SubMaterials.on_lowbeam then
                 if not IsReversing and not IsBraking then
                     if entTable.SubMaterials.on_lowbeam.Base then
-                        for k,v in pairs( entTable.SubMaterials.on_lowbeam.Base ) do
-                            ent:SetSubMaterial( k, v )
+                        for i, v in ipairs( entTable.SubMaterials.on_lowbeam.Base ) do
+                            ent:SetSubMaterial( i, v )
                         end
                     end
                 elseif IsBraking then
                     if IsReversing then
                         if entTable.SubMaterials.on_lowbeam.Brake_Reverse then
-                            for k,v in pairs( entTable.SubMaterials.on_lowbeam.Brake_Reverse ) do
-                                ent:SetSubMaterial( k, v )
+                            for i, v in ipairs( entTable.SubMaterials.on_lowbeam.Brake_Reverse ) do
+                                ent:SetSubMaterial( i, v )
                             end
                         end
                     else
                         if entTable.SubMaterials.on_lowbeam.Brake then
-                            for k,v in pairs( entTable.SubMaterials.on_lowbeam.Brake ) do
-                                ent:SetSubMaterial( k, v )
+                            for i, v in ipairs( entTable.SubMaterials.on_lowbeam.Brake ) do
+                                ent:SetSubMaterial( i, v )
                             end
                         end
                     end
                 else
                     if entTable.SubMaterials.on_lowbeam.Reverse then
-                        for k,v in pairs( entTable.SubMaterials.on_lowbeam.Reverse ) do
-                            ent:SetSubMaterial( k, v )
+                        for i, v in ipairs( entTable.SubMaterials.on_lowbeam.Reverse ) do
+                            ent:SetSubMaterial( i, v )
                         end
                     end
                 end
@@ -138,28 +138,28 @@ local function UpdateSubMats(ent, entTable, Lowbeam, Highbeam, IsBraking, IsReve
         if entTable.SubMaterials.off then
             if not IsReversing and not IsBraking then
                 if entTable.SubMaterials.off.Base then
-                    for k,v in pairs( entTable.SubMaterials.off.Base ) do
-                        ent:SetSubMaterial( k, v )
+                    for i, v in ipairs( entTable.SubMaterials.off.Base ) do
+                        ent:SetSubMaterial( i, v )
                     end
                 end
             elseif IsBraking then
                 if IsReversing then
                     if entTable.SubMaterials.off.Brake_Reverse then
-                        for k,v in pairs( entTable.SubMaterials.off.Brake_Reverse ) do
-                            ent:SetSubMaterial( k, v )
+                        for i, v in ipairs( entTable.SubMaterials.off.Brake_Reverse ) do
+                            ent:SetSubMaterial( i, v )
                         end
                     end
                 else
                     if entTable.SubMaterials.off.Brake then
-                        for k,v in pairs( entTable.SubMaterials.off.Brake ) do
-                            ent:SetSubMaterial( k, v )
+                        for i, v in ipairs( entTable.SubMaterials.off.Brake ) do
+                            ent:SetSubMaterial( i, v )
                         end
                     end
                 end
             else
                 if entTable.SubMaterials.off.Reverse then
-                    for k,v in pairs( entTable.SubMaterials.off.Reverse ) do
-                        ent:SetSubMaterial( k, v )
+                    for i, v in ipairs( entTable.SubMaterials.off.Reverse ) do
+                        ent:SetSubMaterial( i, v )
                     end
                 end
             end
