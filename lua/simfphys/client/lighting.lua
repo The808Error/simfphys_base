@@ -175,7 +175,7 @@ end
 local function ManageProjTextures()
     if not vtable then return end
 
-    for i, ent in pairs(vtable) do
+    for i, ent in ipairs(vtable) do
         if IsValid(ent) then
             local entTable = ent:GetTable()
             local vel = ent:GetVelocity() * RealFrameTime()
@@ -194,7 +194,7 @@ local function ManageProjTextures()
 
             UpdateSubMats(ent, entTable, entTable.triggers[1], entTable.triggers[2], entTable.triggers[4], entTable.triggers[5] )
 
-            for i, proj in pairs( entTable.Projtexts ) do
+            for i, proj in ipairs( entTable.Projtexts ) do
                 local trigger = entTable.triggers[proj.trigger]
                 local enable = entTable.triggers[1] or trigger
 
@@ -346,7 +346,7 @@ local function SetupProjectedTextures( ent, vehiclelist )
     end
 
     ent:CallOnRemove( "remove_projected_textures", function( vehicle )
-        for i, proj in pairs( ent.Projtexts ) do
+        for i, proj in ipairs( ent.Projtexts ) do
             local thelamp = proj.projector
             if IsValid(thelamp) then
                 thelamp:Remove()
