@@ -667,7 +667,7 @@ local function PaintSeatSwitcher( ent, pSeats, SeatCount )
 		yPos = y + radius * 1.2 - (SeatCount + 1) * 30 - 10 + hudoffset_y * screenh
 	end
 
-	for _, Pod in ipairs( pSeats ) do
+	for _, Pod in pairs( pSeats ) do
         if not IsValid( Pod ) then continue end
 		
 		local I = Pod:GetNWInt( "pPodIndex", -1 )
