@@ -766,6 +766,8 @@ end )
 
 local tipcol = Color( 0, 127, 255, 255 )
 
+local VEHICLE_STATS = "Peak Power: %d HP\nPeak Torque: %d Nm\nTop Speed: %d%s (theoretical max)\nWeight: %d kg (%d kg / HP)"
+
 hook.Add("HUDPaint", "simfphys_vehicleditorinfo", function()
 	local ply = LocalPlayer()
 
@@ -786,7 +788,7 @@ hook.Add("HUDPaint", "simfphys_vehicleditorinfo", function()
 
 	local SpeedMul = Hudmph and (Hudreal and 0.0568182 or 0.0568182 * 0.75) or (Hudreal and 0.09144 or 0.09144 * 0.75)
 	local SpeedSuffix = Hudmph and "mph" or "km/h"
-	local toSize = Hudreal and (1/0.75) or 1
+	local toSize = Hudreal and 1.3 or 1
 	local nameSize = Hudreal and "\n\nNote: values are based on playersize" or ""
 	local TopSpeed = math.Round( vInfo["maxspeed"] * SpeedMul )
 	local HP = math.Round( vInfo["horsepower"] * toSize )
@@ -794,8 +796,7 @@ hook.Add("HUDPaint", "simfphys_vehicleditorinfo", function()
 	local PowerToWeight = math.Round(Weight / HP,1)
 	local PeakTorque = math.Round( vInfo["torque"] * toSize )
 
-	local text = "Peak Power: "..HP.." HP".."\nPeak Torque: "..PeakTorque.." Nm\nTop Speed: "..tostring( TopSpeed )..SpeedSuffix.." (theoretical max)".."\nWeight: "..Weight.." kg ("..PowerToWeight.." kg / HP)"..nameSize
-
+	local text = string.format( VEHICLE_STATS, HP, PeakTorque, TopSpeed, SpeedSuffix, Weight, PowerToWeight )
 	local pos = Ent:LocalToWorld( Ent:OBBCenter() ):ToScreen()
 
 	local x = 0

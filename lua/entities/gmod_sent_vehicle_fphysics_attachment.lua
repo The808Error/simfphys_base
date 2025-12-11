@@ -27,6 +27,8 @@ if CLIENT then
 		self:DrawModel()
 	end
 
+	--[[
 	function ENT:DrawTranslucent()
 	end
+	]]
 end

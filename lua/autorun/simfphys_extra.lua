@@ -1010,7 +1010,19 @@ local V = {
 			{
 				pos = Vector(-3,-19,-13),
 				ang = Angle(0,-90,17)
-			}
+			},
+            {
+                pos = Vector(-36.5,18,-13.05),
+                ang = Angle(0,-90,15)
+            },
+            {
+                pos = Vector(-36.5,0,-13.05),
+                ang = Angle(0,-90,15)
+            },
+            {
+                pos = Vector(-36.5,-18,-13.05),
+                ang = Angle(0,-90,15)
+            }
 		},
 
 		ExhaustPositions = {

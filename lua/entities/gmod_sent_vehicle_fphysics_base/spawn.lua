@@ -101,23 +101,23 @@ function ENT:SetupEnteringAnims()
 	self.Exitpoints = {}
 	self.Enterpoints = {}
 
-	for _,i in pairs( attachments ) do
-		local curstring = string.lower( i.name )
+	for _, v in pairs( attachments ) do
+		local curstring = string.lower( v.name )
 
 		if string.match( curstring, "exit", 1 ) then
-			table.insert(self.Exitpoints, curstring)
+			table.insert( self.Exitpoints, curstring )
 		end
 
 		if string.match( curstring, "enter", 1 ) then
-			table.insert(self.Enterpoints, curstring)
+			table.insert( self.Enterpoints, curstring )
 		end
 	end
 
-	if table.Count( self.Enterpoints ) < 1 then
+	if #self.Enterpoints < 1 then
 		self.Enterpoints = nil
 	end
 
-	if table.Count( self.Exitpoints ) < 1 then
+	if #self.Exitpoints < 1 then
 		self.Exitpoints = nil
 	end
 end

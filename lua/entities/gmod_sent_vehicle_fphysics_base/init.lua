@@ -607,117 +607,116 @@ function ENT:SetupControls( ply )
 		end
 	end
 
-	if IsValid( ply ) then
-		self.cl_SteerSettings = {
-			Overwrite = ( ply:GetInfoNum( "cl_simfphys_overwrite", 0 ) >= 1 ),
-			TurnSpeed = ply:GetInfoNum( "cl_simfphys_steerspeed", 8 ),
-			fadespeed = ply:GetInfoNum( "cl_simfphys_fadespeed", 535 ),
-			fastspeedangle = ply:GetInfoNum( "cl_simfphys_steerangfast", 10 ),
-			smoothsteer = ( ply:GetInfoNum( "cl_simfphys_smoothsteer", 0 ) >= 1 ),
-		}
+	if not IsValid( ply ) then return end
+	self.cl_SteerSettings = {
+		Overwrite = ( ply:GetInfoNum( "cl_simfphys_overwrite", 0 ) >= 1 ),
+		TurnSpeed = ply:GetInfoNum( "cl_simfphys_steerspeed", 8 ),
+		fadespeed = ply:GetInfoNum( "cl_simfphys_fadespeed", 535 ),
+		fastspeedangle = ply:GetInfoNum( "cl_simfphys_steerangfast", 10 ),
+		smoothsteer = ( ply:GetInfoNum( "cl_simfphys_smoothsteer", 0 ) >= 1 ),
+	}
 
-		local W = ply:GetInfoNum( "cl_simfphys_keyforward", 0 )
-		local A = ply:GetInfoNum( "cl_simfphys_keyleft", 0 )
-		local S = ply:GetInfoNum( "cl_simfphys_keyreverse", 0 )
-		local D = ply:GetInfoNum( "cl_simfphys_keyright", 0 )
+	local W = ply:GetInfoNum( "cl_simfphys_keyforward", 0 )
+	local A = ply:GetInfoNum( "cl_simfphys_keyleft", 0 )
+	local S = ply:GetInfoNum( "cl_simfphys_keyreverse", 0 )
+	local D = ply:GetInfoNum( "cl_simfphys_keyright", 0 )
 
-		local aW = ply:GetInfoNum( "cl_simfphys_key_air_forward", 0 )
-		local aA = ply:GetInfoNum( "cl_simfphys_key_air_left", 0 )
-		local aS = ply:GetInfoNum( "cl_simfphys_key_air_reverse", 0 )
-		local aD = ply:GetInfoNum( "cl_simfphys_key_air_right", 0 )
+	local aW = ply:GetInfoNum( "cl_simfphys_key_air_forward", 0 )
+	local aA = ply:GetInfoNum( "cl_simfphys_key_air_left", 0 )
+	local aS = ply:GetInfoNum( "cl_simfphys_key_air_reverse", 0 )
+	local aD = ply:GetInfoNum( "cl_simfphys_key_air_right", 0 )
 
-		local GearUp = ply:GetInfoNum( "cl_simfphys_keygearup", 0 )
-		local GearDown = ply:GetInfoNum( "cl_simfphys_keygeardown", 0 )
+	local GearUp = ply:GetInfoNum( "cl_simfphys_keygearup", 0 )
+	local GearDown = ply:GetInfoNum( "cl_simfphys_keygeardown", 0 )
 
-		local R = ply:GetInfoNum( "cl_simfphys_cruisecontrol", 0 )
+	local R = ply:GetInfoNum( "cl_simfphys_cruisecontrol", 0 )
 
-		local F = ply:GetInfoNum( "cl_simfphys_lights", 0 )
+	local F = ply:GetInfoNum( "cl_simfphys_lights", 0 )
 
-		local V = ply:GetInfoNum( "cl_simfphys_foglights", 0 )
+	local V = ply:GetInfoNum( "cl_simfphys_foglights", 0 )
 
-		local H = ply:GetInfoNum( "cl_simfphys_keyhorn", 0 )
+	local H = ply:GetInfoNum( "cl_simfphys_keyhorn", 0 )
 
-		local I = ply:GetInfoNum( "cl_simfphys_keyengine", 0 )
+	local I = ply:GetInfoNum( "cl_simfphys_keyengine", 0 )
 
-		local Shift = ply:GetInfoNum( "cl_simfphys_keywot", 0 )
+	local Shift = ply:GetInfoNum( "cl_simfphys_keywot", 0 )
 
-		local Alt = ply:GetInfoNum( "cl_simfphys_keyclutch", 0 )
-		local Space = ply:GetInfoNum( "cl_simfphys_keyhandbrake", 0 )
+	local Alt = ply:GetInfoNum( "cl_simfphys_keyclutch", 0 )
+	local Space = ply:GetInfoNum( "cl_simfphys_keyhandbrake", 0 )
 
-		local lock = ply:GetInfoNum( "cl_simfphys_key_lock", 0 )
+	local lock = ply:GetInfoNum( "cl_simfphys_key_lock", 0 )
 
-		local w_dn = numpad.OnDown( ply, W, "k_forward",self, true )
-		local w_up = numpad.OnUp( ply, W, "k_forward",self, false )
-		local s_dn = numpad.OnDown( ply, S, "k_reverse",self, true )
-		local s_up = numpad.OnUp( ply, S, "k_reverse",self, false )
-		local a_dn = numpad.OnDown( ply, A, "k_left",self, true )
-		local a_up = numpad.OnUp( ply, A, "k_left",self, false )
-		local d_dn = numpad.OnDown( ply, D, "k_right",self, true )
-		local d_up = numpad.OnUp( ply, D, "k_right",self, false )
+	local w_dn = numpad.OnDown( ply, W, "k_forward",self, true )
+	local w_up = numpad.OnUp( ply, W, "k_forward",self, false )
+	local s_dn = numpad.OnDown( ply, S, "k_reverse",self, true )
+	local s_up = numpad.OnUp( ply, S, "k_reverse",self, false )
+	local a_dn = numpad.OnDown( ply, A, "k_left",self, true )
+	local a_up = numpad.OnUp( ply, A, "k_left",self, false )
+	local d_dn = numpad.OnDown( ply, D, "k_right",self, true )
+	local d_up = numpad.OnUp( ply, D, "k_right",self, false )
 
-		local aw_dn = numpad.OnDown( ply, aW, "k_a_forward",self, true )
-		local aw_up = numpad.OnUp( ply, aW, "k_a_forward",self, false )
-		local as_dn = numpad.OnDown( ply, aS, "k_a_reverse",self, true )
-		local as_up = numpad.OnUp( ply, aS, "k_a_reverse",self, false )
-		local aa_dn = numpad.OnDown( ply, aA, "k_a_left",self, true )
-		local aa_up = numpad.OnUp( ply, aA, "k_a_left",self, false )
-		local ad_dn = numpad.OnDown( ply, aD, "k_a_right",self, true )
-		local ad_up = numpad.OnUp( ply, aD, "k_a_right",self, false )
+	local aw_dn = numpad.OnDown( ply, aW, "k_a_forward",self, true )
+	local aw_up = numpad.OnUp( ply, aW, "k_a_forward",self, false )
+	local as_dn = numpad.OnDown( ply, aS, "k_a_reverse",self, true )
+	local as_up = numpad.OnUp( ply, aS, "k_a_reverse",self, false )
+	local aa_dn = numpad.OnDown( ply, aA, "k_a_left",self, true )
+	local aa_up = numpad.OnUp( ply, aA, "k_a_left",self, false )
+	local ad_dn = numpad.OnDown( ply, aD, "k_a_right",self, true )
+	local ad_up = numpad.OnUp( ply, aD, "k_a_right",self, false )
 
-		local gup_dn = numpad.OnDown( ply, GearUp, "k_gup",self, true )
-		local gup_up = numpad.OnUp( ply, GearUp, "k_gup",self, false )
+	local gup_dn = numpad.OnDown( ply, GearUp, "k_gup",self, true )
+	local gup_up = numpad.OnUp( ply, GearUp, "k_gup",self, false )
 
-		local gdn_dn = numpad.OnDown( ply, GearDown, "k_gdn",self, true )
-		local gdn_up = numpad.OnUp( ply, GearDown, "k_gdn",self, false )
+	local gdn_dn = numpad.OnDown( ply, GearDown, "k_gdn",self, true )
+	local gdn_up = numpad.OnUp( ply, GearDown, "k_gdn",self, false )
 
-		local shift_dn = numpad.OnDown( ply, Shift, "k_wot",self, true )
-		local shift_up = numpad.OnUp( ply, Shift, "k_wot",self, false )
+	local shift_dn = numpad.OnDown( ply, Shift, "k_wot",self, true )
+	local shift_up = numpad.OnUp( ply, Shift, "k_wot",self, false )
 
-		local alt_dn = numpad.OnDown( ply, Alt, "k_clutch",self, true )
-		local alt_up = numpad.OnUp( ply, Alt, "k_clutch",self, false )
+	local alt_dn = numpad.OnDown( ply, Alt, "k_clutch",self, true )
+	local alt_up = numpad.OnUp( ply, Alt, "k_clutch",self, false )
 
-		local space_dn = numpad.OnDown( ply, Space, "k_hbrk",self, true )
-		local space_up = numpad.OnUp( ply, Space, "k_hbrk",self, false )
+	local space_dn = numpad.OnDown( ply, Space, "k_hbrk",self, true )
+	local space_up = numpad.OnUp( ply, Space, "k_hbrk",self, false )
 
-		local k_cruise = numpad.OnDown( ply, R, "k_ccon",self, true )
+	local k_cruise = numpad.OnDown( ply, R, "k_ccon",self, true )
 
-		local k_lights_dn = numpad.OnDown( ply, F, "k_lgts",self, true )
-		local k_lights_up = numpad.OnUp( ply, F, "k_lgts",self, false )
+	local k_lights_dn = numpad.OnDown( ply, F, "k_lgts",self, true )
+	local k_lights_up = numpad.OnUp( ply, F, "k_lgts",self, false )
 
-		local k_flights_dn = numpad.OnDown( ply, V, "k_flgts",self, true )
-		local k_flights_up = numpad.OnUp( ply, V, "k_flgts",self, false )
+	local k_flights_dn = numpad.OnDown( ply, V, "k_flgts",self, true )
+	local k_flights_up = numpad.OnUp( ply, V, "k_flgts",self, false )
 
-		local k_horn_dn = numpad.OnDown( ply, H, "k_hrn",self, true )
-		local k_horn_up = numpad.OnUp( ply, H, "k_hrn",self, false )
+	local k_horn_dn = numpad.OnDown( ply, H, "k_hrn",self, true )
+	local k_horn_up = numpad.OnUp( ply, H, "k_hrn",self, false )
 
-		local k_engine_dn = numpad.OnDown( ply, I, "k_eng",self, true )
-		local k_engine_up = numpad.OnUp( ply, I, "k_eng",self, false )
+	local k_engine_dn = numpad.OnDown( ply, I, "k_eng",self, true )
+	local k_engine_up = numpad.OnUp( ply, I, "k_eng",self, false )
 
-		local k_lock_dn = numpad.OnDown( ply, lock, "k_lock",self, true )
-		local k_lock_up = numpad.OnUp( ply, lock, "k_lock",self, false )
+	local k_lock_dn = numpad.OnDown( ply, lock, "k_lock",self, true )
+	local k_lock_up = numpad.OnUp( ply, lock, "k_lock",self, false )
 
-		self.keys = {
-			w_dn, w_up,
-			s_dn, s_up,
-			a_dn, a_up,
-			d_dn, d_up,
-			aw_dn, aw_up,
-			as_dn, as_up,
-			aa_dn, aa_up,
-			ad_dn, ad_up,
-			gup_dn, gup_up,
-			gdn_dn, gdn_up,
-			shift_dn, shift_up,
-			alt_dn, alt_up,
-			space_dn, space_up,
-			k_cruise,
-			k_lights_dn, k_lights_up,
-			k_horn_dn, k_horn_up,
-			k_flights_dn, k_flights_up,
-			k_engine_dn, k_engine_up,
-			k_lock_dn, k_lock_up,
-		}
-	end
+	self.keys = {
+		w_dn, w_up,
+		s_dn, s_up,
+		a_dn, a_up,
+		d_dn, d_up,
+		aw_dn, aw_up,
+		as_dn, as_up,
+		aa_dn, aa_up,
+		ad_dn, ad_up,
+		gup_dn, gup_up,
+		gdn_dn, gdn_up,
+		shift_dn, shift_up,
+		alt_dn, alt_up,
+		space_dn, space_up,
+		k_cruise,
+		k_lights_dn, k_lights_up,
+		k_horn_dn, k_horn_up,
+		k_flights_dn, k_flights_up,
+		k_engine_dn, k_engine_up,
+		k_lock_dn, k_lock_up,
+	}
 end
 
 function ENT:PlayAnimation( animation )
@@ -961,8 +960,8 @@ function ENT:EnteringSequence( ply )
 	local dist
 
 	if LinkedDoorAnims then
-		for i,_ in pairs( self.ModelInfo.LinkDoorAnims ) do
-			local seq_ = self.ModelInfo.LinkDoorAnims[ i ].enter
+		for i,_ in ipairs( self.ModelInfo.LinkDoorAnims ) do
+			local seq_ = self.ModelInfo.LinkDoorAnims[i].enter
 
 			local a_pos = self:GetAttachment( self:LookupAttachment( i ) ).Pos
 			local a_dist = (ply:GetPos() - a_pos):Length()
@@ -1043,7 +1042,7 @@ function ENT:SetPassenger( ply )
 				ply:SetEyeAngles( angles )
 			end
 		end )
-	elseif not self.PassengerSeats then
+	else
 		local closestSeat = self:GetClosestSeat( ply )
 		if closestSeat and IsValid( closestSeat:GetDriver() ) then
 			ply:EnterVehicle( closestSeat )
