@@ -547,7 +547,7 @@ function ENT:SimulateVehicle( curtime )
 		local S = selfTable.PressedKeys["S"] and 1 or 0
 		local D = selfTable.PressedKeys["D"] and 1 or selfTable.PressedKeys["joystick_steer_right"]
 
-		if IsValidDriver and then self:PlayerSteerVehicle( ply, A, D ) end
+		if IsValidDriver then self:PlayerSteerVehicle( ply, A, D ) end
 
 		local aW = selfTable.PressedKeys["aW"] and 1 or selfTable.PressedKeys["joystick_air_w"]
 		local aA = selfTable.PressedKeys["aA"] and 1 or selfTable.PressedKeys["joystick_air_a"]
@@ -873,7 +873,6 @@ function ENT:StallAndRestart( nTimer, bIgnoreSettings )
 	end)
 end
 
-local oldSteer22222 = 0
 function ENT:PlayerSteerVehicle( ply, left, right )
 	if not IsValid( ply ) then return end
 
@@ -908,8 +907,6 @@ function ENT:PlayerSteerVehicle( ply, left, right )
 
 	local SteerRate = FastSteeringRate + (SlowSteeringRate - FastSteeringRate) * Ratio
 	local Steer = ((left + right) > 0 and (right - left) or self:GetMouseSteer()) * SteerRate
-	if oldSteer22222 == Steer then return end
-
 
 	local LocalDrift = math.acos( math.Clamp( self.Right:Dot(self.VelNorm) ,-1,1) ) * (180 / math.pi) - 90
 
@@ -920,7 +917,6 @@ function ENT:PlayerSteerVehicle( ply, left, right )
 	self.SmoothAng = self.SmoothAng + math.Clamp((Steer - CounterSteer) - self.SmoothAng,-Rate,Rate)
 
 	self:SteerVehicle( self.SmoothAng )
-	oldSteer22222 = Steer
 end
 
 function ENT:SteerVehicle( steer )
