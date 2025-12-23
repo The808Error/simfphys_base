@@ -547,7 +547,7 @@ function ENT:SimulateVehicle( curtime )
 		local S = selfTable.PressedKeys["S"] and 1 or 0
 		local D = selfTable.PressedKeys["D"] and 1 or selfTable.PressedKeys["joystick_steer_right"]
 
-		if IsValidDriver then self:PlayerSteerVehicle( ply, A, D ) end
+		if IsValidDriver and then self:PlayerSteerVehicle( ply, A, D ) end
 
 		local aW = selfTable.PressedKeys["aW"] and 1 or selfTable.PressedKeys["joystick_air_w"]
 		local aA = selfTable.PressedKeys["aA"] and 1 or selfTable.PressedKeys["joystick_air_a"]
