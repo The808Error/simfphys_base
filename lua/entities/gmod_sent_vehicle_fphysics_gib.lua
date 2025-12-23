@@ -74,15 +74,18 @@ if SERVER then
 				timer.Simple( 0.7, function()
 					if not IsValid( self ) then return end
 
-					self.particleeffect = ents.Create( "info_particle_system" )
-					self.particleeffect:SetKeyValue( "effect_name" , "fire_large_01")
-					self.particleeffect:SetKeyValue( "start_active" , 1)
-					self.particleeffect:SetOwner( self )
-					self.particleeffect:SetPos( self:LocalToWorld( self:GetPhysicsObject():GetMassCenter() + Vector(0,0,15) ) )
-					self.particleeffect:SetAngles( self:GetAngles() )
-					self.particleeffect:Spawn()
-					self.particleeffect:Activate()
-					self.particleeffect:SetParent( self )
+					local particle = ents.Create( "info_particle_system" )
+
+					self.particleeffect = particle
+
+					particle:SetKeyValue( "effect_name" , "fire_large_01")
+					particle:SetKeyValue( "start_active" , 1)
+					particle:SetOwner( self )
+					particle:SetPos( self:LocalToWorld( self:GetPhysicsObject():GetMassCenter() + Vector(0,0,15) ) )
+					particle:SetAngles( self:GetAngles() )
+					particle:Spawn()
+					particle:Activate()
+					particle:SetParent( self )
 
 					self.FireSound = CreateSound(self, "ambient/fire/firebig.wav")
 					self.FireSound:Play()
@@ -104,16 +107,18 @@ if SERVER then
 					end
 				end)
 			else
-				self.particleeffect = ents.Create( "info_particle_system" )
-				self.particleeffect:SetKeyValue( "effect_name" , "fire_small_03")
-				self.particleeffect:SetKeyValue( "start_active" , 1)
-				self.particleeffect:SetOwner( self )
-				self.particleeffect:SetPos( self:LocalToWorld( self:GetPhysicsObject():GetMassCenter() ) )
-				self.particleeffect:SetAngles( self:GetAngles() )
-				self.particleeffect:Spawn()
-				self.particleeffect:Activate()
-				self.particleeffect:SetParent( self )
-				self.particleeffect:Fire( "Stop", "", math.random(0.5,3) )
+				local particle = ents.Create( "info_particle_system" )
+				self.particleeffect = particle
+				
+				particle:SetKeyValue( "effect_name" , "fire_small_03")
+				particle:SetKeyValue( "start_active" , 1)
+				particle:SetOwner( self )
+				particle:SetPos( self:LocalToWorld( self:GetPhysicsObject():GetMassCenter() ) )
+				particle:SetAngles( self:GetAngles() )
+				particle:Spawn()
+				particle:Activate()
+				particle:SetParent( self )
+				particle:Fire( "Stop", "", math.random(0.5,3) )
 			end
 
 		end)

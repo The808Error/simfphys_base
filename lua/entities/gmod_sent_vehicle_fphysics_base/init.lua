@@ -378,10 +378,10 @@ function ENT:OnActiveChanged( name, old, new )
 	if not istable( self.Wheels ) then return end
 
 	for i = 1, #self.Wheels do
-		local wheel = self.Wheels[ i ]
-		if IsValid(wheel) then
-			wheel:SetOnGround( 0 )
-		end
+		local wheel = self.Wheels[i]
+		if not IsValid(wheel) then continue end
+
+		wheel:SetOnGround( 0 )
 	end
 end
 
@@ -616,6 +616,7 @@ function ENT:SetupControls( ply )
 		smoothsteer = ( ply:GetInfoNum( "cl_simfphys_smoothsteer", 0 ) >= 1 ),
 	}
 
+	-- TODO: Rework this whole fucking key systems
 	local W = ply:GetInfoNum( "cl_simfphys_keyforward", 0 )
 	local A = ply:GetInfoNum( "cl_simfphys_keyleft", 0 )
 	local S = ply:GetInfoNum( "cl_simfphys_keyreverse", 0 )
