@@ -95,12 +95,12 @@ function SWEP:OwnerChanged()
 end
 
 function SWEP:Think()
-	if self:GetOwner():KeyPressed( IN_USE ) then
-		if self:GetActive() or not IsValid( self:GetCar() ) then
-			self:Disable()
-		else
-			self:Enable()
-		end
+	if not self:GetOwner():KeyPressed( IN_USE ) then return end
+	
+	if self:GetActive() or not IsValid( self:GetCar() ) then
+		self:Disable()
+	else
+		self:Enable()
 	end
 end
 
@@ -143,23 +143,23 @@ end
 function SWEP:Enable()
 	local car = self:GetCar()
 
-	if IsValid( car ) then
+	if not IsValid( car ) then return end
 
-		local ply = self:GetOwner()
-		if IsValid( car:GetDriver() ) then
-			ply:ChatPrint( "Vehicle is already in use." )
+	local ply = self:GetOwner()
+	
+	if IsValid( car:GetDriver() ) then
+		ply:ChatPrint( "Vehicle is already in use." )
+	else
+		if car:GetIsVehicleLocked() then
+			ply:ChatPrint( "Vehicle is locked." )
 		else
-			if car:GetIsVehicleLocked() then
-				ply:ChatPrint( "Vehicle is locked." )
-			else
-				self.UsingPlayer = ply
-				self:SetActive( true )
+			self.UsingPlayer = ply
+			self:SetActive( true )
 
-				ply:SetMoveType( MOVETYPE_NONE )
-				ply:DrawViewModel( false )
+			ply:SetMoveType( MOVETYPE_NONE )
+			ply:DrawViewModel( false )
 
-				car.RemoteDriver = ply
-			end
+			car.RemoteDriver = ply
 		end
 	end
 end
