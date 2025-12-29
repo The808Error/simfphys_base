@@ -150,7 +150,7 @@ function ENT:BodyGroupIsValid( bodygroups )
 end
 
 function ENT:GetPassengerSeats()
-	if not istable( self.pSeat ) then
+	if not self.pSeat then
 		self.pSeat = {}
 
 		local DriverSeat = self:GetDriverSeat()
@@ -190,7 +190,7 @@ function ENT:GetSeatAnimation( ply )
 		end
 	end
 
-	if not istable( self.PassengerSeats ) then -- on client self.PassengerSeats is always nil
+	if not self.PassengerSeats then -- on client self.PassengerSeats is always nil
 
 		if not self.HasCheckedpSeats then
 			self.HasCheckedpSeats = true
@@ -203,7 +203,7 @@ function ENT:GetSeatAnimation( ply )
 
 	local pSeatTBL = self.PassengerSeats[ Pod:GetNWInt( "pPodIndex", -1 ) - 1 ]
 
-	if not istable( pSeatTBL ) then return -1 end -- not taking any chances
+	if not pSeatTBL then return -1 end -- not taking any chances
 
 	local seq = pSeatTBL.anim
 

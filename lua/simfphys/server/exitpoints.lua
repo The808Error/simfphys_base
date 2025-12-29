@@ -119,7 +119,7 @@ end
 local function ExitUsingAttachments( ent, ply, b_ent )
 	local Center = b_ent:LocalToWorld( b_ent:OBBCenter() )
 	local Filter = {ent,ply,b_ent}
-	local LinkedDoorAnims = istable(b_ent.ModelInfo) and istable(b_ent.ModelInfo.LinkDoorAnims)
+	local LinkedDoorAnims = b_ent.ModelInfo and b_ent.ModelInfo.LinkDoorAnims
 
 	for i = 1, #b_ent.Wheels do
 		table.insert( Filter, b_ent.Wheels[i] )

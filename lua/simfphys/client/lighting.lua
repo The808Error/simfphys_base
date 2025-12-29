@@ -42,8 +42,8 @@ local function BodyGroupIsValid( bodygroups, entity )
     return false
 end
 
-local function UpdateSubMats(ent, entTable, Lowbeam, Highbeam, IsBraking, IsReversing )
-    if not istable( entTable.SubMaterials ) then return end
+local function UpdateSubMats( ent, entTable, Lowbeam, Highbeam, IsBraking, IsReversing )
+    if not entTable.SubMaterials then return end
 
     if entTable.SubMaterials.turnsignals then
         local IsTurningLeft = entTable.signal_left

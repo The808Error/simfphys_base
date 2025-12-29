@@ -57,7 +57,7 @@ if SERVER then
 
 			simfphys.SetOwner( self.EntityOwner, self.WheelDust )
 
-			if not istable( StormFox ) and not istable( StormFox2 ) then return end
+			if not StormFox and not StormFox2 then return end
 
 			self.WheelSplash = ents.Create( "info_particle_system" )
 			self.WheelSplash:SetKeyValue( "effect_name" , "WheelSplashForward")
@@ -129,9 +129,9 @@ if SERVER then
 	end
 
 	function ENT:CheckWeather()
-		if not istable( StormFox ) and not istable( StormFox2 ) then return end
+		if not StormFox and not StormFox2 then return end
 
-		if istable( StormFox ) then
+		if StormFox  then
 			if isfunction( StormFox.IsRaining ) then
 				if StormFox.IsRaining() then
 					self.RainDetected = true
@@ -143,17 +143,15 @@ if SERVER then
 					self.snd_skid = "simulated_vehicles/sfx/concrete_skid.wav"
 				end
 			end
-		else
-			if istable( StormFox2.Weather ) and isfunction( StormFox2.Weather.IsRaining ) then
-				if StormFox2.Weather:IsRaining() then
-					self.RainDetected = true
-					self.snd_roll = "simulated_vehicles/sfx/concrete_roll_wet.wav"
-					self.snd_skid = "simulated_vehicles/sfx/concrete_skid_wet.wav"
-				else
-					self.RainDetected = false
-					self.snd_roll = "simulated_vehicles/sfx/concrete_roll.wav"
-					self.snd_skid = "simulated_vehicles/sfx/concrete_skid.wav"
-				end
+		elseif StormFox2.Weather and isfunction( StormFox2.Weather.IsRaining ) then
+			if StormFox2.Weather:IsRaining() then
+				self.RainDetected = true
+				self.snd_roll = "simulated_vehicles/sfx/concrete_roll_wet.wav"
+				self.snd_skid = "simulated_vehicles/sfx/concrete_skid_wet.wav"
+			else
+				self.RainDetected = false
+				self.snd_roll = "simulated_vehicles/sfx/concrete_roll.wav"
+				self.snd_skid = "simulated_vehicles/sfx/concrete_skid.wav"
 			end
 		end
 	end

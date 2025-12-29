@@ -113,14 +113,14 @@ function ENT:SimulateEngine( IdleRPM, LimitRPM, Powerbandstart, Powerbandend, c_
 
 	selfTbl.RpmDiff = selfTbl.EngineRPM - GearedRPM
 
-	local signGearRatio = ((selfTbl.GearRatio > 0) and 1 or 0) + ((selfTbl.GearRatio < 0) and -1 or 0)
-	local signThrottle = (Throttle > 0) and 1 or 0
-	local signSpeed = ((selfTbl.ForwardSpeed > 0) and 1 or 0) + ((selfTbl.ForwardSpeed < 0) and -1 or 0)
+	local signGearRatio = ( ( selfTbl.GearRatio > 0 ) and 1 or 0 ) + ( ( selfTbl.GearRatio < 0 ) and -1 or 0 )
+	local signThrottle = ( Throttle > 0 ) and 1 or 0
+	local signSpeed = ( ( selfTbl.ForwardSpeed > 0 ) and 1 or 0 ) + ( ( selfTbl.ForwardSpeed < 0 ) and -1 or 0 )
 
-	local TorqueDiff = (selfTbl.RpmDiff / LimitRPM) * 0.15 * selfTbl.Torque
-	local EngineBrake = (signThrottle == 0) and mathMin( selfTbl.EngineRPM * (selfTbl.EngineRPM / LimitRPM) ^ 2 / 60 * signSpeed, 100 ) or 0
+	local TorqueDiff = ( selfTbl.RpmDiff / LimitRPM ) * 0.15 * selfTbl.Torque
+	local EngineBrake = ( signThrottle == 0 ) and mathMin( selfTbl.EngineRPM * ( selfTbl.EngineRPM / LimitRPM ) ^ 2 / 60 * signSpeed, 100 ) or 0
 
-	local GearedPower = ((selfTbl.ThrottleDelay <= c_time and (selfTbl.Torque + TorqueDiff) * signThrottle * signGearRatio or 0) - EngineBrake) / math.abs(selfTbl.GearRatio) / 50
+	local GearedPower = ( ( selfTbl.ThrottleDelay <= c_time and ( selfTbl.Torque + TorqueDiff ) * signThrottle * signGearRatio or 0 ) - EngineBrake ) / math.abs( selfTbl.GearRatio ) / 50
 
 	selfTbl.EngineTorque = IsRunning and GearedPower * InvClutch or 0
 
@@ -134,14 +134,14 @@ function ENT:SimulateEngine( IdleRPM, LimitRPM, Powerbandstart, Powerbandend, c_
 	end
 
 	if simfphys.Fuel then
-		local FuelUse = (Throttle * 0.3 + 0.7) * ((selfTbl.EngineRPM / LimitRPM) * MaxTorque + selfTbl.Torque) / 1500000
+		local FuelUse = ( Throttle * 0.3 + 0.7 ) * ( ( selfTbl.EngineRPM / LimitRPM ) * MaxTorque + selfTbl.Torque ) / 1500000
 		local Fuel = self:GetFuel()
-		self:SetFuel( Fuel - FuelUse * (1 / simfphys.FuelMul) )
+		self:SetFuel( Fuel - FuelUse * ( 1 / simfphys.FuelMul ) )
 
-		selfTbl.UsedFuel = selfTbl.UsedFuel and (selfTbl.UsedFuel + FuelUse) or 0
+		selfTbl.UsedFuel = selfTbl.UsedFuel and ( selfTbl.UsedFuel + FuelUse ) or 0
 		selfTbl.CheckUse = selfTbl.CheckUse or 0
 		if selfTbl.CheckUse < CurTime() then
-			selfTbl.CheckUse = CurTime() + 1
+			selfTbl.CheckUse = CurTime() + 1 
 			self:SetFuelUse( selfTbl.UsedFuel * 60 )
 			selfTbl.UsedFuel = 0
 		end
@@ -154,14 +154,17 @@ function ENT:SimulateEngine( IdleRPM, LimitRPM, Powerbandstart, Powerbandend, c_
 	end
 
 
+	-- This only seems to apply forces that then nullifies itself
+	--[[
 	local phys = self:GetPhysicsObject()
 
 	local ReactionForce = ( selfTbl.EngineTorque * 2 - mathClamp( selfTbl.ForwardSpeed, -selfTbl.Brake, selfTbl.Brake ) ) * selfTbl.DriveWheelsOnGround
 	local BaseMassCenter = phys:GetMassCenter()
 	local dt_mul = mathMax( mathMin( self:GetPowerDistribution() + 0.5, 1 ), 0 )
 
-	phys:ApplyForceOffset( -selfTbl.Forward * selfTbl.Mass * ReactionForce, BaseMassCenter + selfTbl.Up * dt_mul )
-	phys:ApplyForceOffset( selfTbl.Forward * selfTbl.Mass * ReactionForce, BaseMassCenter - selfTbl.Up * dt_mul )
+	--phys:ApplyForceOffset( -selfTbl.Forward * selfTbl.Mass * ReactionForce, BaseMassCenter + selfTbl.Up * dt_mul )
+	--phys:ApplyForceOffset( selfTbl.Forward * selfTbl.Mass * ReactionForce, BaseMassCenter - selfTbl.Up * dt_mul )
+	]]
 end
 
 function ENT:SimulateTransmission( k_throttle, k_brake, k_fullthrottle, k_clutch, k_handbrake, k_gearup, k_geardown, isauto, IdleRPM, Powerbandstart, Powerbandend, shiftmode, cruisecontrol, curtime )
