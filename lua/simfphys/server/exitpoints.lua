@@ -197,7 +197,7 @@ local function Exit_vehicle_simple( ent, ply, b_ent )
 	if not IsValid( ply ) then return end
 	if not IsValid( b_ent ) then return end
 
-	if istable( b_ent.Exitpoints ) and b_ent:GetVelocity():Length() < 250 then
+	if b_ent.Exitpoints and b_ent:GetVelocity():Length() < 250 then
 		ExitUsingAttachments( ent, ply, b_ent )
 	else
 		ExitUsingMyTraces( ent, ply, b_ent )

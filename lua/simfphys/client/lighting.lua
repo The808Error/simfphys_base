@@ -817,7 +817,7 @@ hook.Add( "PostDrawTranslucentRenderables", "simfphys_draw_sprites", function( _
             end
 
             if SpritesDisabled then return end
-            if not istable( entTable.triggers ) then return end
+            if not entTable.triggers then return end
 
             for i, sprite in pairs( entTable.Sprites ) do
                 if not sprite.Damaged then

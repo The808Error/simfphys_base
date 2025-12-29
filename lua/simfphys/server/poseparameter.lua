@@ -6,7 +6,7 @@ local function sendppdata( _, ply )
 	if not IsValid( ent ) then return end
 
 	if ent.IsInitialized and not ent:IsInitialized() then return end
-	if not istable( ent.Wheels ) then return end
+	if not ent.Wheels then return end
 
 	if ent.CustomWheels then
 		net.Start( "simfphys_send_ppdata", true )

@@ -286,8 +286,9 @@ local function ValidateModel( model )
 end
 
 function TOOL:GetVehicleData( ent, ply )
-	if not IsValid(ent) then return end
-	if not istable(ply.TOOLMemory) then ply.TOOLMemory = {} end
+	if not IsValid( ent ) then return end
+	--if not ply.TOOLMemory then ply.TOOLMemory = {} end
+	ply.TOOLMemory = ply.TOOLMemory or {}
 
 	table.Empty( ply.TOOLMemory )
 
@@ -424,7 +425,7 @@ local function SetWheelOffset( ent, offset_front, offset_rear )
 	ent.WheelTool_Foffset = offset_front
 	ent.WheelTool_Roffset = offset_rear
 
-	if not istable( ent.Wheels ) or not istable( ent.GhostWheels ) then return end
+	if not ent.Wheels or not ent.GhostWheels then return end
 
 	for i = 1, #ent.GhostWheels do
 		local Wheel = ent.Wheels[ i ]
@@ -541,7 +542,7 @@ function TOOL:LeftClick( trace )
 
 	local ply = self:GetOwner()
 
-	if not istable(ply.TOOLMemory) then return end
+	if not ply.TOOLMemory then return end
 
 	local vname = ply.TOOLMemory.SpawnName
 	local Update = false
@@ -649,7 +650,7 @@ function TOOL:LeftClick( trace )
 		end
 		Ent.Gears = Gears
 
-		if istable( ply.TOOLMemory.SubMaterials ) then
+		if ply.TOOLMemory.SubMaterials then
 			for i = 0, #ply.TOOLMemory.SubMaterials do
 				Ent:SetSubMaterial( i, ply.TOOLMemory.SubMaterials[i] )
 			end
@@ -818,7 +819,7 @@ function TOOL:RightClick( trace )
 
 	if ply.LockRightClick then ply:PrintMessage( HUD_PRINTTALK, "Duplicator is busy") return end
 
-	if not istable(ply.TOOLMemory) then
+	if not ply.TOOLMemory then
 		ply.TOOLMemory = {}
 	end
 

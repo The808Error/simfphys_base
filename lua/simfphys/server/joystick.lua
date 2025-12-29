@@ -168,8 +168,10 @@ hook.Add("JoystickInitialize", "simfphys_joystick", function()
 
 				if vehicle.base:GetDriverSeat() ~= vehicle then return end
 
+
+				-- TODO: Look at these 'val' checks
 				for k,v in pairs( simfphys.jcon ) do
-					if istable(v) and v.IsJoystickReg then
+					if v and v.IsJoystickReg then
 						local val = joystick.Get( ply, v.uid )
 
 						if v.type == "analog" then

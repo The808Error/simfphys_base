@@ -38,7 +38,7 @@ local function SetWheelOffset( ent, offset_front, offset_rear )
     ent.WheelTool_Foffset = offset_front
     ent.WheelTool_Roffset = offset_rear
 
-    if not istable( ent.Wheels ) or not istable( ent.GhostWheels ) then return end
+    if not ent.Wheels or not ent.GhostWheels then return end
 
     for i = 1, #ent.GhostWheels do
         local Wheel = ent.Wheels[ i ]
