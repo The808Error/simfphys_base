@@ -104,7 +104,7 @@ if CLIENT then
 
 			btn.Paint = function( self, w, h )
 				local clrNormal = self.highlight and CLR_NORMAL1 or CLR_NORMAL2
-				local clr = selectedItem == name and CLR_SELECTED or ( self:IsHovered() and CLR_HOVERED or clrNoraml )
+				local clr = selectedItem == name and CLR_SELECTED or ( self:IsHovered() and CLR_HOVERED or clrNormal )
 
 				draw.RoundedBox( 5, 1, 1, w - 2, h - 1, clr )
 			end
