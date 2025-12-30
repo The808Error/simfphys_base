@@ -46,7 +46,7 @@ if CLIENT then
 	language.Add( "tool.simfphysduplicator.0", "Left click to spawn or update. Right click to copy" )
 	language.Add( "tool.simfphysduplicator.1", "Left click to spawn or update. Right click to copy" )
 
-	local selectedItem = nil
+	local selectedItem
 	local TOOLMemory = {}
 
 	net.Receive( "sphys_dupe", function( length )
@@ -69,7 +69,15 @@ if CLIENT then
 		end
 	end
 
+
 	local ITEM_OFFSET = 22
+
+	local CLR_ALPHA = 255
+	local CLR_SELECTED = Color( 0, 73, 120, CLR_ALPHA )
+	local CLR_NORMAL1 = Color( 108, 111, 114, CLR_ALPHA )
+	local CLR_NORMAL2 = Color( 77, 80, 82, CLR_ALPHA )
+	local CLR_HOVERED = Color( 41, 128, 185, CLR_ALPHA )
+
 	local function fillList( panel, tbl )
 		panel:Clear()
 
@@ -95,13 +103,10 @@ if CLIENT then
 			btn.printname = name
 
 			btn.Paint = function( self, w, h )
-				local c_selected = Color( 128, 185, 128, 255 )
-				local c_normal = self.highlight and Color( 108, 111, 114, 200 ) or Color( 77, 80, 82, 200 )
-				local c_hovered = Color( 41, 128, 185, 255 )
-				
-				local c_ = ( selectedItem == name ) and c_selected or ( self:IsHovered() and c_hovered or c_normal )
+				local clrNormal = self.highlight and CLR_NORMAL1 or CLR_NORMAL2
+				local clr = selectedItem == name and CLR_SELECTED or ( self:IsHovered() and CLR_HOVERED or clrNormal )
 
-				draw.RoundedBox( 5, 1, 1, w - 2, h - 1, c_ )
+				draw.RoundedBox( 5, 1, 1, w - 2, h - 1, clr )
 			end
 
 			btn.DoClick = function()
@@ -161,6 +166,7 @@ if CLIENT then
 				matches[#matches + 1] = name
 			end
 
+			-- Show search matches
 			fillList( ScrollPanel, matches )
 		end
 
@@ -184,6 +190,7 @@ if CLIENT then
 			local textEntry = vgui.Create( "DTextEntry", saveFrame )
 			textEntry:Dock( FILL )
 			textEntry:RequestFocus()
+			saveFrame:DockPadding( 3, 26, 3, 3 )
 
 			textEntry.OnEnter = function( _, name )
 				saveFrame:Close()
@@ -200,12 +207,13 @@ if CLIENT then
 
 					local mats = ""
 					local first = true
+					
 					for k, v in pairs( v ) do
 						if first then
 							first = false
-							mats = mats..v
+							mats = mats .. v
 						else
-							mats = mats..","..v
+							mats = mats .. "," .. v
 						end
 					end
 					dataString = dataString .. k .. "=" .. mats .. "#"
@@ -247,26 +255,25 @@ if CLIENT then
 				shit[k] =  string.char( string.byte( v ) - 20 )
 			end
 
-			local Data = string.Explode( "#", string.Implode("",shit) )
+			local data = string.Explode( "#", string.Implode( "", shit ) )
 
 			table.Empty( TOOLMemory )
 
-			for _,v in pairs(Data) do
-				local Var = string.Explode( "=", v )
-				local name = Var[1]
-				local variable = Var[2]
+			for _,v in pairs( data ) do
+				local vars = string.Explode( "=", v )
+				local name = vars[1]
+				local var = vars[2]
 
-				if name and variable then
-					if name == "SubMaterials" then
-						TOOLMemory[name] = {}
+				if not name or not var then continue end
+				if name == "SubMaterials" then
+					TOOLMemory[name] = {}
 
-						local submats = string.Explode( ",", variable )
-						for i = 0, ( #submats - 1 ) do
-							TOOLMemory[name][i] = submats[i+1]
-						end
-					else
-						TOOLMemory[name] = variable
+					local submats = string.Explode( ",", var )
+					for i = 0, ( #submats - 1 ) do
+						TOOLMemory[name][i] = submats[i+1]
 					end
+				else
+					TOOLMemory[name] = var
 				end
 			end
 

@@ -421,16 +421,19 @@ local function drawsimfphysHUD(vehicle,SeatCount)
 		local digit_1  =  printspeed % 10
 		local digit_2 =  (printspeed - digit_1) % 100
 		local digit_3  = (printspeed - digit_1 - digit_2) % 1000
+		local digit_4  = (printspeed - digit_1 - digit_2 - digit_3) % 10000
 
 		local col_on = color_simfphys_col_on
 		local col_off = color_simfphys_col_off
 		local col1 = (printspeed > 0) and col_off or col_on
 		local col2 = (printspeed >= 10) and col_off or col_on
 		local col3 = (printspeed >= 100) and col_off or col_on
+		local col4 = (printspeed >= 1000) and col_off or col_on
 
-		draw.SimpleText( digit_1, "simfphysfont4", x + radius * 0.84 + o_x, y + radius * 0.65 + o_y, col1, 1, 1 )
-		draw.SimpleText( digit_2/ 10, "simfphysfont4", x + radius * 0.48 + o_x, y + radius * 0.65 + o_y, col2, 1, 1 )
-		draw.SimpleText( digit_3 / 100, "simfphysfont4", x + radius * 0.12 + o_x, y + radius * 0.65 +  o_y, col3, 1, 1 )
+		draw.SimpleText( digit_1, "simfphysfont4", x + radius + o_x, y + radius * 0.65 + o_y, col1, 1, 1 )
+		draw.SimpleText( digit_2 / 10, "simfphysfont4", x + radius * 0.66 + o_x, y + radius * 0.65 + o_y, col2, 1, 1 )
+		draw.SimpleText( digit_3 / 100, "simfphysfont4", x + radius * 0.33 + o_x, y + radius * 0.65 +  o_y, col3, 1, 1 )
+		draw.SimpleText( digit_4 / 1000, "simfphysfont4", x + o_x, y + radius * 0.65 +  o_y, col4, 1, 1 )
 
 		sm_throttle = sm_throttle + (throttle - sm_throttle) * 0.1
 		local t_size = (sizey * 0.1)

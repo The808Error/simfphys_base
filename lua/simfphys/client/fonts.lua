@@ -56,7 +56,7 @@ surface.CreateFont( "simfphysfont3", {
 surface.CreateFont( "simfphysfont4", {
 	font = "Verdana",
 	extended = false,
-	size = (ScrH() >= 900 and (ScrH() >= 1080 and 20 or 18) or 12) * 6,
+	size = (ScrH() >= 900 and (ScrH() >= 1080 and 20 or 18) or 12) * 5.7,
 	weight = 500,
 	blursize = 0,
 	scanlines = 0,
