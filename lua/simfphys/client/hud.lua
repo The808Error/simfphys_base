@@ -120,7 +120,7 @@ hook.Add( "StartCommand", "simfphysmove", function( ply, cmd )
 
 		local Moving = math.abs(ms_delta_x) > 0
 
-		ms_pos_x = Moving and math.Clamp(ms_pos_x + ms_delta_x * frametime * 0.05 * ms_sensitivity,-1,1) or (ms_pos_x + math.Clamp(-ms_pos_x,-ms_return,ms_return))
+		ms_pos_x = Moving and math.Clamp(ms_pos_x + ms_delta_x * frametime * 0.05 * ms_sensitivity,-2,2) or (ms_pos_x + math.Clamp(-ms_pos_x,-ms_return,ms_return))
 
 		SteerVehicle = ((math.max( math.abs(ms_pos_x) - ms_deadzone / 16, 0) ^ ms_exponent) / (1 - ms_deadzone / 16))  * ((ms_pos_x > 0) and 1 or -1)
 

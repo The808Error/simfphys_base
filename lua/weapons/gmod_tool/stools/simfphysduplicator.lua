@@ -46,49 +46,76 @@ if CLIENT then
 	language.Add( "tool.simfphysduplicator.0", "Left click to spawn or update. Right click to copy" )
 	language.Add( "tool.simfphysduplicator.1", "Left click to spawn or update. Right click to copy" )
 
-	local selecteditem	= nil
-	local TOOLMemory	= {}
+	local selectedItem = nil
+	local TOOLMemory = {}
 
-	net.Receive("sphys_dupe", function( length )
+	net.Receive( "sphys_dupe", function( length )
 		TOOLMemory = net.ReadTable()
-	end)
+	end )
 
-	local function GetSaves( panel )
-		local saved_vehicles = file.Find("saved_vehicles/*.txt", "DATA")
+
+	local vehicleSaves = {}
+
+	local function getVehicleSaves()
+		local saved_vehicles = file.Find( "saved_vehicles/*.txt", "DATA" )
 		local index = 0
 		local highlight = false
 		local offset = 22
 
-		for k,v in pairs(saved_vehicles) do
-			local printname = v
+		vehicleSaves = {}
 
-			if not selecteditem then
-				selecteditem = printname
+		for _, printname in pairs( saved_vehicles ) do
+			vehicleSaves[#vehicleSaves + 1] = printname
+		end
+	end
+
+	local ITEM_OFFSET = 22
+	local function fillList( panel, tbl )
+		panel:Clear()
+
+		local highlight = false
+
+		for i = 1, #tbl do
+			local name = tbl[i]
+
+			if not selectedItem then
+				selectedItem = name
 			end
 
-			local Button = vgui.Create( "DButton", panel )
-			Button:SetText( printname )
-			Button:SetTextColor( Color( 255, 255, 255 ) )
-			Button:SetPos( 0,index * offset)
-			Button:SetSize( 280, offset )
-			Button.highlight = highlight
-			Button.printname = printname
-			Button.Paint = function( self, w, h )
 
+			local btn = vgui.Create( "DButton", panel )
+			btn:SetText( name )
+			btn:SetTextColor( color_white )
+			btn:SetPos( 0, ( i - 1 ) * ITEM_OFFSET )
+			btn:SetSize( 280, ITEM_OFFSET )
+			
+			highlight = not highlight
+
+			btn.highlight = highlight
+			btn.printname = name
+
+			btn.Paint = function( self, w, h )
 				local c_selected = Color( 128, 185, 128, 255 )
 				local c_normal = self.highlight and Color( 108, 111, 114, 200 ) or Color( 77, 80, 82, 200 )
 				local c_hovered = Color( 41, 128, 185, 255 )
-				local c_ = (selecteditem == self.printname) and c_selected or (self:IsHovered() and c_hovered or c_normal)
+				
+				local c_ = ( selectedItem == name ) and c_selected or ( self:IsHovered() and c_hovered or c_normal )
 
 				draw.RoundedBox( 5, 1, 1, w - 2, h - 1, c_ )
 			end
-			Button.DoClick = function( self )
-				selecteditem = self.printname
-			end
 
-			index = index + 1
-			highlight = not highlight
+			btn.DoClick = function()
+				selectedItem = name
+			end
 		end
+	end
+
+
+	local function refreshList( panel )
+		selectedItem = nil
+
+		getVehicleSaves()
+		fillList( panel, vehicleSaves )
 	end
 
 	function TOOL.BuildCPanel( panel )
@@ -96,161 +123,180 @@ if CLIENT then
 			file.CreateDir( "saved_vehicles" )
 		end
 
-		local Frame = vgui.Create( "DFrame", panel )
-		Frame:SetPos( 10, 30 )
-		Frame:SetSize( 280, 320 )
-		Frame:SetTitle( "" )
-		Frame:SetVisible( true )
-		Frame:ShowCloseButton( false )
-		Frame:SetDraggable( false )
-		Frame.Paint = function( self, w, h )
-			draw.RoundedBox( 5, 0, 0, w, h, Color( 115, 115, 115, 255 ) )
-			draw.RoundedBox( 5, 1, 1, w - 2, h - 2, Color( 234, 234, 234, 255 ) )
-		end
+		local container = vgui.Create( "DPanel", panel )
+		container:SetPos( 10, 30 )
+		container:SetSize( 280, 350 )
 
-		local ScrollPanel = vgui.Create( "DScrollPanel", Frame )
-		ScrollPanel:SetSize( 280, 320 )
-		ScrollPanel:SetPos( 0, 0 )
+		do
+			local COLOR1 = Color( 115, 115, 115, 255 )
+			local COLOR2 = Color( 234, 234, 234, 255 )
 
-		GetSaves( ScrollPanel )
-
-		local Button = vgui.Create( "DButton", panel )
-		Button:SetText( "Save" )
-		Button:SetPos( 10, 350)
-		Button:SetSize( 280, 20 )
-		Button.DoClick = function( self )
-			if isstring(TOOLMemory.SpawnName) then
-				local Frame = vgui.Create( "DFrame" )
-					Frame:SetPos( gui.MouseX() - 100,  gui.MouseY() - 30 )
-					Frame:SetSize( 280, 50 )
-					Frame:SetTitle( "Save As..." )
-					Frame:SetVisible( true )
-					Frame:ShowCloseButton( true )
-					Frame:MakePopup()
-					Frame:SetDraggable( true )
-
-				local TextEntry = vgui.Create( "DTextEntry", Frame )
-				TextEntry:SetPos( 5, 25 )
-				TextEntry:SetSize( 270, 20 )
-
-				TextEntry.OnEnter = function()
-					local Name = TextEntry:GetValue()
-
-					if Name ~= "" then
-						local DataString = ""
-
-						for k,v in pairs(TOOLMemory) do
-							if k == "SubMaterials" then
-								local mats = ""
-								local first = true
-								for k, v in pairs( v ) do
-									if first then
-										first = false
-										mats = mats..v
-									else
-										mats = mats..","..v
-									end
-								end
-								DataString = DataString..k.."="..mats.."#"
-							else
-								DataString = DataString..k.."="..tostring( v ).."#"
-							end
-						end
-
-						local words = string.Explode( "", DataString )
-						local shit = {}
-
-						for k, v in pairs( words ) do
-							shit[k] =  string.char( string.byte( v ) + 20 )
-						end
-
-						file.Write("saved_vehicles/"..Name..".txt", string.Implode("",shit)  )
-
-						ScrollPanel:Clear()
-						selecteditem = Name..".txt"
-						GetSaves( ScrollPanel )
-					end
-
-					Frame:Close()
-				end
+			container.Paint = function( self, w, h )
+				draw.RoundedBox( 5, 0, 0, w, h, COLOR1 )
+				draw.RoundedBox( 5, 1, 1, w - 2, h - 2, COLOR2 )
 			end
 		end
 
-		local Button = vgui.Create( "DButton", panel )
-		Button:SetText( "Load" )
-		Button:SetPos( 10, 370)
-		Button:SetSize( 280, 20 )
-		Button.DoClick = function( self )
-			if isstring(selecteditem) then
-				if not file.Exists( "saved_vehicles/"..selecteditem, "DATA" ) then
-					ScrollPanel:Clear()
-					selecteditem = nil
-					GetSaves( ScrollPanel )
+		-- Vehicle list
+		local ScrollPanel = vgui.Create( "DScrollPanel", container )
+		ScrollPanel:SetSize( 280, 300 )
+		ScrollPanel:SetPos( 0, 20 )
+		
+		refreshList( ScrollPanel )
 
-					return
+		-- Search bar
+		local searchBar = vgui.Create( "DTextEntry", container )
+		searchBar:SetSize( 280, 20 )
+		searchBar:SetPlaceholderText( "Search saved vehicles..." )
+
+		searchBar.OnEnter = function( _, prompt )
+			getVehicleSaves()
+
+			local matches = {}
+			prompt = string.lower( prompt )
+
+			for _, name in ipairs( vehicleSaves ) do
+				if not string.find( string.lower( name ), prompt ) then continue end
+
+				matches[#matches + 1] = name
+			end
+
+			fillList( ScrollPanel, matches )
+		end
+
+
+		local saveBtn = vgui.Create( "DButton", panel )
+		saveBtn:SetText( "Save" )
+		saveBtn:SetPos( 10, 350)
+		saveBtn:SetSize( 280, 20 )
+		saveBtn.DoClick = function()
+			if not TOOLMemory.SpawnName then return end
+
+			local saveFrame = vgui.Create( "DFrame" )
+			saveFrame:SetPos( gui.MouseX() - 100,  gui.MouseY() - 30 )
+			saveFrame:SetSize( 280, 50 )
+			saveFrame:SetTitle( "Save As..." )
+			saveFrame:SetVisible( true )
+			saveFrame:ShowCloseButton( true )
+			saveFrame:MakePopup()
+			saveFrame:SetDraggable( true )
+
+			local textEntry = vgui.Create( "DTextEntry", saveFrame )
+			textEntry:Dock( FILL )
+			textEntry:RequestFocus()
+
+			textEntry.OnEnter = function( _, name )
+				saveFrame:Close()
+
+				if name == "" then return end
+				local dataString = ""
+
+				for k, v in pairs( TOOLMemory ) do
+					if k ~= "SubMaterials" then
+						dataString = dataString .. k .. "=" .. tostring( v ) .. "#"
+
+						continue
+					end
+
+					local mats = ""
+					local first = true
+					for k, v in pairs( v ) do
+						if first then
+							first = false
+							mats = mats..v
+						else
+							mats = mats..","..v
+						end
+					end
+					dataString = dataString .. k .. "=" .. mats .. "#"
 				end
 
-				local DataString = file.Read( "saved_vehicles/"..selecteditem, "DATA" )
-
-				local words = string.Explode( "", DataString )
+				local words = string.Explode( "", dataString )
 				local shit = {}
 
-				for k, v in pairs( words ) do
-					shit[k] =  string.char( string.byte( v ) - 20 )
+				for i, v in ipairs( words ) do
+					shit[i] = string.char( string.byte( v ) + 20 )
 				end
 
-				local Data = string.Explode( "#", string.Implode("",shit) )
+				file.Write( "saved_vehicles/" .. name .. ".txt", string.Implode( "", shit ) )
 
-				table.Empty( TOOLMemory )
+				refreshList( ScrollPanel )
+				selectedItem = name..".txt"
+			end
+		end
 
-				for _,v in pairs(Data) do
-					local Var = string.Explode( "=", v )
-					local name = Var[1]
-					local variable = Var[2]
+		local loadBtn = vgui.Create( "DButton", panel )
+		loadBtn:SetText( "Load" )
+		loadBtn:SetPos( 10, 370)
+		loadBtn:SetSize( 280, 20 )
+		loadBtn.DoClick = function( self )
+			if not selectedItem then return end
 
-					if name and variable then
-						if name == "SubMaterials" then
-							TOOLMemory[name] = {}
+			if not file.Exists( "saved_vehicles/" .. selectedItem, "DATA" ) then
+				refreshList( ScrollPanel )
 
-							local submats = string.Explode( ",", variable )
-							for i = 0, ( #submats - 1 ) do
-								TOOLMemory[name][i] = submats[i+1]
-							end
-						else
-							TOOLMemory[name] = variable
+				return
+			end
+
+			local DataString = file.Read( "saved_vehicles/" .. selectedItem, "DATA" )
+
+			local words = string.Explode( "", DataString )
+			local shit = {}
+
+			for k, v in pairs( words ) do
+				shit[k] =  string.char( string.byte( v ) - 20 )
+			end
+
+			local Data = string.Explode( "#", string.Implode("",shit) )
+
+			table.Empty( TOOLMemory )
+
+			for _,v in pairs(Data) do
+				local Var = string.Explode( "=", v )
+				local name = Var[1]
+				local variable = Var[2]
+
+				if name and variable then
+					if name == "SubMaterials" then
+						TOOLMemory[name] = {}
+
+						local submats = string.Explode( ",", variable )
+						for i = 0, ( #submats - 1 ) do
+							TOOLMemory[name][i] = submats[i+1]
 						end
+					else
+						TOOLMemory[name] = variable
 					end
 				end
-
-				net.Start("sphys_dupe")
-					net.WriteTable( TOOLMemory )
-				net.SendToServer()
-			end
-		end
-
-		local Button = vgui.Create( "DButton", panel )
-		Button:SetText( "Delete" )
-		Button:SetPos( 10, 430)
-		Button:SetSize( 280, 20 )
-		Button.DoClick = function( self )
-
-			if isstring(selecteditem) then
-				file.Delete( "saved_vehicles/"..selecteditem )
 			end
 
-			ScrollPanel:Clear()
-			selecteditem = nil
-			GetSaves( ScrollPanel )
+			net.Start( "sphys_dupe" )
+			net.WriteTable( TOOLMemory )
+			net.SendToServer()
 		end
 
-		local Button = vgui.Create( "DButton", panel )
-		Button:SetText( "Refresh" )
-		Button:SetPos( 10, 390)
-		Button:SetSize( 280, 20 )
-		Button.DoClick = function( self )
-			ScrollPanel:Clear()
-			selecteditem = nil
-			GetSaves( ScrollPanel )
+		local deleteBtn = vgui.Create( "DButton", panel )
+		deleteBtn:SetText( "Delete" )
+		deleteBtn:SetPos( 10, 430)
+		deleteBtn:SetSize( 280, 20 )
+		deleteBtn.DoClick = function( self )
+			if not selectedItem then return end
+
+			Derma_Query( "Are you sure you want to delete " .. selectedItem .. "?", "Confirm deletion",
+				"Yes", function()
+					file.Delete( "saved_vehicles/" .. selectedItem )
+
+					refreshList( ScrollPanel )
+				end,
+			"No" )
+		end
+
+		local refreshBtn = vgui.Create( "DButton", panel )
+		refreshBtn:SetText( "Refresh" )
+		refreshBtn:SetPos( 10, 390)
+		refreshBtn:SetSize( 280, 20 )
+		refreshBtn.DoClick = function()
+			refreshList( ScrollPanel )
 		end
 	end
 end
@@ -276,13 +322,7 @@ local function ValidateModel( model )
 		end
 	end
 
-	local list = list.Get( "simfphys_Wheels" )[model]
-
-	if list then
-		return true
-	end
-
-	return false
+	return list.Get( "simfphys_Wheels" )[model] and true or false
 end
 
 function TOOL:GetVehicleData( ent, ply )

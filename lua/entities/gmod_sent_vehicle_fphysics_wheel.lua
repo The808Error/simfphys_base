@@ -453,7 +453,7 @@ if SERVER then
 		local Type = dmginfo:GetDamageType()
 		local BaseEnt = self:GetBaseEnt()
 
-		if TYPE == DMG_BLAST then return end  -- no tirepopping on explosions
+		if Type == DMG_BLAST then return end  -- no tirepopping on explosions
 
 		if IsValid(BaseEnt) then
 			if BaseEnt:GetBulletProofTires() then return end

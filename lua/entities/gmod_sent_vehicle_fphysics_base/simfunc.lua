@@ -155,16 +155,16 @@ function ENT:SimulateEngine( IdleRPM, LimitRPM, Powerbandstart, Powerbandend, c_
 
 
 	-- This only seems to apply forces that then nullifies itself
-	--[[
+	
 	local phys = self:GetPhysicsObject()
 
 	local ReactionForce = ( selfTbl.EngineTorque * 2 - mathClamp( selfTbl.ForwardSpeed, -selfTbl.Brake, selfTbl.Brake ) ) * selfTbl.DriveWheelsOnGround
 	local BaseMassCenter = phys:GetMassCenter()
 	local dt_mul = mathMax( mathMin( self:GetPowerDistribution() + 0.5, 1 ), 0 )
 
-	--phys:ApplyForceOffset( -selfTbl.Forward * selfTbl.Mass * ReactionForce, BaseMassCenter + selfTbl.Up * dt_mul )
-	--phys:ApplyForceOffset( selfTbl.Forward * selfTbl.Mass * ReactionForce, BaseMassCenter - selfTbl.Up * dt_mul )
-	]]
+	phys:ApplyForceOffset( -selfTbl.Forward * selfTbl.Mass * ReactionForce, BaseMassCenter + selfTbl.Up * dt_mul )
+	phys:ApplyForceOffset( selfTbl.Forward * selfTbl.Mass * ReactionForce, BaseMassCenter - selfTbl.Up * dt_mul )
+	
 end
 
 function ENT:SimulateTransmission( k_throttle, k_brake, k_fullthrottle, k_clutch, k_handbrake, k_gearup, k_geardown, isauto, IdleRPM, Powerbandstart, Powerbandend, shiftmode, cruisecontrol, curtime )

@@ -707,7 +707,7 @@ function ENT:SetupVehicle()
 	hook.Run( "simfphysOnSpawn", self )
 end
 
-function ENT:CreateWheel(index, name, attachmentpos, height, radius, swap_y , poseposition, suspensiontravel, constant, damping, rdamping)
+function ENT:CreateWheel( index, name, attachmentpos, height, radius, swap_y , poseposition, suspensiontravel, constant, damping, rdamping )
 	local fAng = self:LocalToWorldAngles( self.VehicleData.LocalAngForward )
 	local rAng = self:LocalToWorldAngles( self.VehicleData.LocalAngRight )
 
@@ -717,13 +717,13 @@ function ENT:CreateWheel(index, name, attachmentpos, height, radius, swap_y , po
 
 	local RopeLength = 150
 	local LimiterLength = 60
-	local LimiterRopeLength = math.sqrt( (suspensiontravel * 0.5) ^ 2 + LimiterLength ^ 2 )
+	local LimiterRopeLength = math.sqrt( ( suspensiontravel * 0.5 ) ^ 2 + LimiterLength ^ 2 )
 	local wheelMass = self.Mass / 32
 
-	if self.FrontWheelMass and (index == 1 or index == 2) then
+	if self.FrontWheelMass and ( index == 1 or index == 2 ) then
 		wheelMass = self.FrontWheelMass
 	end
-	if self.RearWheelMass and (index == 3 or index == 4 or index == 5 or index == 6) then
+	if self.RearWheelMass and ( index == 3 or index == 4 or index == 5 or index == 6 ) then
 		wheelMass = self.RearWheelMass
 	end
 
