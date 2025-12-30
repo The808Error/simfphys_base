@@ -1,15 +1,18 @@
 
-TOOL.Category		= "simfphys"
-TOOL.Name			= "#Wheel Model Editor"
-TOOL.Command		= nil
-TOOL.ConfigName		= ""
+TOOL.Category = "simfphys"
+TOOL.Name = "#Wheel Model Editor"
+TOOL.Command = nil
+TOOL.ConfigName	= ""
 
-TOOL.ClientConVar[ "frontwheelmodel" ] = "models/props_vehicles/apc_tire001.mdl"
-TOOL.ClientConVar[ "rearwheelmodel" ] = "models/props_vehicles/apc_tire001.mdl"
-TOOL.ClientConVar[ "sameasfront" ] = 1
-TOOL.ClientConVar[ "camber" ] = 0
-TOOL.ClientConVar[ "offsetfront" ] = 0
-TOOL.ClientConVar[ "offsetrear" ] = 0
+TOOL.ClientConVar["frontwheelmodel"] = "models/props_vehicles/apc_tire001.mdl"
+TOOL.ClientConVar["rearwheelmodel"] = "models/props_vehicles/apc_tire001.mdl"
+TOOL.ClientConVar["sameasfront"] = 1
+TOOL.ClientConVar["camber"] = 0
+TOOL.ClientConVar["offsetfront"] = 0
+TOOL.ClientConVar["offsetrear"] = 0
+
+
+local SERVER = SERVER
 
 if CLIENT then
     language.Add( "tool.simfphyswheeleditor.name", "Wheel Model Editor" )
@@ -19,17 +22,19 @@ if CLIENT then
 end
 
 local function GetRight( ent, index, WheelPos )
-    local Steer = ent:GetTransformedDirection()
+    local steer = ent:GetTransformedDirection()
 
-    local Right = ent.Right
+    local right = ent.Right
+
+    local steerMasterValid = IsValid( ent.SteerMaster )
 
     if WheelPos.IsFrontWheel then
-        Right = (IsValid( ent.SteerMaster ) and Steer.Right or ent.Right) * (WheelPos.IsRightWheel and 1 or -1)
+        right = ( steerMasterValid and steer.Right or ent.Right ) * ( WheelPos.IsRightWheel and 1 or -1 )
     else
-        Right = (IsValid( ent.SteerMaster ) and Steer.Right2 or ent.Right) * (WheelPos.IsRightWheel and 1 or -1)
+        right = ( steerMasterValid and steer.Right2 or ent.Right ) * ( WheelPos.IsRightWheel and 1 or -1 )
     end
 
-    return Right
+    return right
 end
 
 local function SetWheelOffset( ent, offset_front, offset_rear )
@@ -41,29 +46,29 @@ local function SetWheelOffset( ent, offset_front, offset_rear )
     if not ent.Wheels or not ent.GhostWheels then return end
 
     for i = 1, #ent.GhostWheels do
-        local Wheel = ent.Wheels[ i ]
-        local WheelModel = ent.GhostWheels[i]
-        local WheelPos = ent:LogicWheelPos( i )
+        local wheel = ent.Wheels[i]
+        local wheelModel = ent.GhostWheels[i]
+        local wheelPos = ent:LogicWheelPos( i )
 
-        if IsValid( Wheel ) and IsValid( WheelModel ) then
-            local Pos = Wheel:GetPos()
-            local Right = GetRight( ent, i, WheelPos )
-            local offset = WheelPos.IsFrontWheel and offset_front or offset_rear
+        if IsValid( wheel ) and IsValid( wheelModel ) then
+            local pos = wheel:GetPos()
+            local right = GetRight( ent, i, wheelPos )
+            local offset = wheelPos.IsFrontWheel and offset_front or offset_rear
 
-            WheelModel:SetParent( nil )
+            wheelModel:SetParent()
 
-            local physObj = WheelModel:GetPhysicsObject()
+            local physObj = wheelModel:GetPhysicsObject()
             if IsValid( physObj ) then
                 physObj:EnableMotion( false )
             end
 
-            WheelModel:SetPos( Pos + Right * offset )
-            WheelModel:SetParent( Wheel )
+            wheelModel:SetPos( pos + right * offset )
+            wheelModel:SetParent( wheel )
         end
     end
 end
 
-local function ApplyWheel(ply, ent, data)
+local function ApplyWheel( ply, ent, data )
 
     ent.CustomWheelAngleOffset = data[2]
     ent.CustomWheelAngleOffset_R = data[4]
@@ -72,11 +77,11 @@ local function ApplyWheel(ply, ent, data)
         if not IsValid( ent ) then return end
 
         for i = 1, #ent.GhostWheels do
-            local Wheel = ent.GhostWheels[i]
+            local wheel = ent.GhostWheels[i]
 
-            if IsValid( Wheel ) then
-                local isfrontwheel = (i == 1 or i == 2)
-                local swap_y = (i == 2 or i == 4 or i == 6)
+            if IsValid( wheel ) then
+                local isfrontwheel = ( i == 1 or i == 2 )
+                local swap_y = ( i == 2 or i == 4 or i == 6 )
 
                 local angleoffset = isfrontwheel and ent.CustomWheelAngleOffset or ent.CustomWheelAngleOffset_R
 
@@ -99,194 +104,196 @@ local function ApplyWheel(ply, ent, data)
 
                 ghostAng:RotateAroundAxis(Forward, Camber * mirAng)
 
-                Wheel:SetModelScale( 1 )
-                Wheel:SetModel( model )
-                Wheel:SetAngles( ghostAng )
+                wheel:SetModelScale( 1 )
+                wheel:SetModel( model )
+                wheel:SetAngles( ghostAng )
 
                 timer.Simple( 0.05, function()
-                    if not IsValid( Wheel ) or not IsValid( ent ) then return end
-                    local wheelsize = Wheel:OBBMaxs() - Wheel:OBBMins()
-                    local radius = isfrontwheel and ent.FrontWheelRadius or ent.RearWheelRadius
-                    local size = (radius * 2) / math.max(wheelsize.x,wheelsize.y,wheelsize.z)
+                    if not IsValid( wheel ) or not IsValid( ent ) then return end
 
-                    Wheel:SetModelScale( size )
-                end)
+                    local wheelsize = wheel:OBBMaxs() - wheel:OBBMins()
+                    local radius = isfrontwheel and ent.FrontWheelRadius or ent.RearWheelRadius
+                    local size = ( radius * 2 ) / math.max( wheelsize.x, wheelsize.y, wheelsize.z )
+
+                    wheel:SetModelScale( size )
+                end )
             end
         end
-    end)
+    end )
 end
 
 local function ValidateModel( model )
     local v_list = list.Get( "simfphys_vehicles" )
+
     for listname, _ in pairs( v_list ) do
-        if v_list[listname].Members.CustomWheels then
-            local FrontWheel = v_list[listname].Members.CustomWheelModel
-            local RearWheel = v_list[listname].Members.CustomWheelModel_R
+        if not  v_list[listname].Members.CustomWheels then continue end
 
-            if FrontWheel then
-                FrontWheel = string.lower( FrontWheel )
-            end
+        local FrontWheel = v_list[listname].Members.CustomWheelModel
+        local RearWheel = v_list[listname].Members.CustomWheelModel_R
 
-            if RearWheel then
-                RearWheel = string.lower( RearWheel )
-            end
+        if FrontWheel then
+            FrontWheel = string.lower( FrontWheel )
+        end
 
-            if model == FrontWheel or model == RearWheel then
-                return true
-            end
+        if RearWheel then
+            RearWheel = string.lower( RearWheel )
+        end
+
+        if model == FrontWheel or model == RearWheel then
+            return true
         end
     end
 
-    local list = list.Get( "simfphys_Wheels" )[model]
-
-    if list then
-        return true
-    end
-
-    return false
+    return list.Get( "simfphys_Wheels" )[model] and true or false
 end
 
 local function GetAngleFromSpawnlist( model )
-    if not model then print("invalid model") return Angle(0,0,0) end
+    if not model then
+        --print( "invalid model" )
+
+        return Angle()
+    end
 
     model = string.lower( model )
 
     local v_list = list.Get( "simfphys_vehicles" )
     for listname, _ in pairs( v_list ) do
-        if v_list[listname].Members.CustomWheels then
-            local FrontWheel = v_list[listname].Members.CustomWheelModel
-            local RearWheel = v_list[listname].Members.CustomWheelModel_R
+        if not v_list[listname].Members.CustomWheels then continue end
 
-            if FrontWheel then
-                FrontWheel = string.lower( FrontWheel )
-            end
+        local frontWheel = v_list[listname].Members.CustomWheelModel
+        local rearWheel = v_list[listname].Members.CustomWheelModel_R
 
-            if RearWheel then
-                RearWheel = string.lower( RearWheel )
-            end
+        if frontWheel then
+            frontWheel = string.lower( frontWheel )
+        end
 
-            if model == FrontWheel or model == RearWheel then
-                local Angleoffset = v_list[listname].Members.CustomWheelAngleOffset
-                if Angleoffset then
-                    return Angleoffset
-                end
+        if rearWheel then
+            rearWheel = string.lower( rearWheel )
+        end
+
+        if model == frontWheel or model == rearWheel then
+            local angleoffset = v_list[listname].Members.CustomWheelAngleOffset
+
+            if angleoffset then
+                return angleoffset
             end
         end
     end
 
     local list = list.Get( "simfphys_Wheels" )[model]
-    local output = list and list.Angle or Angle(0,0,0)
 
-    return output
+    return list and list.Angle or Angle()
 end
 
 function TOOL:LeftClick( trace )
     local ent = trace.Entity
 
     if not simfphys.IsCar( ent ) then return false end
+    if not SERVER then return true end
+    if not ent.CustomWheels then return end
 
-    if SERVER then
-        if not ent.CustomWheels then return end
+    local PhysObj = ent:GetPhysicsObject()
+    if not IsValid( PhysObj ) then return end
 
-        local PhysObj = ent:GetPhysicsObject()
-        if not IsValid( PhysObj ) then return end
+    local freezeWhenDone = PhysObj:IsMotionEnabled()
+    local freezeWheels = {}
+    PhysObj:EnableMotion( false )
+    ent:SetNotSolid( true )
 
-        local freezeWhenDone = PhysObj:IsMotionEnabled()
-        local freezeWheels = {}
-        PhysObj:EnableMotion( false )
-        ent:SetNotSolid( true )
+    local ResetPos = ent:GetPos()
+    local ResetAng = ent:GetAngles()
 
-        local ResetPos = ent:GetPos()
-        local ResetAng = ent:GetAngles()
+    ent:SetPos( ResetPos + Vector(0,0,30) )
+    ent:SetAngles( Angle(0,ResetAng.y,0) )
 
-        ent:SetPos( ResetPos + Vector(0,0,30) )
-        ent:SetAngles( Angle(0,ResetAng.y,0) )
+    for i = 1, #ent.Wheels do
+        local wheel = ent.Wheels[i]
+        if not IsValid( wheel ) then continue end
 
-        for i = 1, #ent.Wheels do
-            local Wheel = ent.Wheels[ i ]
-            if IsValid( Wheel ) then
-                local wPObj = Wheel:GetPhysicsObject()
+        local wPObj = wheel:GetPhysicsObject()
 
-                if IsValid( wPObj ) then
-                    freezeWheels[ i ] = {}
-                    freezeWheels[ i ].dofreeze = wPObj:IsMotionEnabled()
-                    freezeWheels[ i ].pos = Wheel:GetPos()
-                    freezeWheels[ i ].ang = Wheel:GetAngles()
-                    Wheel:SetNotSolid( true )
-                    wPObj:EnableMotion( true )
-                    wPObj:Wake()
+        if IsValid( wPObj ) then
+            freezeWheels[i] = {
+                dofreeze = wPObj:IsMotionEnabled(),
+                pos = wheel:GetPos(),
+                ang = wheel:GetAngles()
+            }
+
+            wheel:SetNotSolid( true )
+            wPObj:EnableMotion( true )
+            wPObj:Wake()
+        end
+    end
+
+    timer.Simple( 0.25, function()
+        if not IsValid( ent ) then return end
+
+        local front_model = self:GetClientInfo("frontwheelmodel")
+        local front_angle = GetAngleFromSpawnlist(front_model)
+
+        local sameasfront = self:GetClientInfo("sameasfront") == "1"
+        local camber = self:GetClientInfo("camber")
+
+        local rear_model = sameasfront and front_model or self:GetClientInfo("rearwheelmodel")
+        local rear_angle = GetAngleFromSpawnlist(rear_model)
+
+        local front_offset = self:GetClientInfo("offsetfront")
+        local rear_offset = self:GetClientInfo("offsetrear")
+
+        if not front_model or not rear_model or not front_angle or not rear_angle then print("wtf bro how did you do this") return false end
+
+        if not ValidateModel( front_model ) or not ValidateModel( rear_model ) then
+            local ply = self:GetOwner()
+            ply:PrintMessage( HUD_PRINTTALK, "selected wheel does not exist on the server")
+
+            return false
+        end
+
+        if ent.CustomWheels and ent.GhostWheels then
+            ent:SteerVehicle( 0 )
+
+            for i = 1, #ent.Wheels do
+                local wheel = ent.Wheels[i]
+
+                if IsValid( wheel ) then
+                    local physobj = wheel:GetPhysicsObject()
+                    physobj:EnableMotion( true )
+                    physobj:Wake()
                 end
             end
+
+            ent.Camber = camber
+            ApplyWheel(self:GetOwner(), ent, {front_model,front_angle,rear_model,rear_angle,camber})
+            SetWheelOffset( ent, front_offset, rear_offset )
         end
 
         timer.Simple( 0.25, function()
             if not IsValid( ent ) then return end
+            if not IsValid( PhysObj ) then return end
 
-            local front_model = self:GetClientInfo("frontwheelmodel")
-            local front_angle = GetAngleFromSpawnlist(front_model)
+            PhysObj:EnableMotion( freezeWhenDone )
+            ent:SetNotSolid( false )
+            ent:SetPos( ResetPos )
+            ent:SetAngles( ResetAng )
 
-            local sameasfront = self:GetClientInfo("sameasfront") == "1"
-            local camber = self:GetClientInfo("camber")
+            for i = 1, #freezeWheels do
+                local Wheel = ent.Wheels[ i ]
+                if IsValid( Wheel ) then
+                    local wPObj = Wheel:GetPhysicsObject()
 
-            local rear_model = sameasfront and front_model or self:GetClientInfo("rearwheelmodel")
-            local rear_angle = GetAngleFromSpawnlist(rear_model)
+                    Wheel:SetNotSolid( false )
 
-            local front_offset = self:GetClientInfo("offsetfront")
-            local rear_offset = self:GetClientInfo("offsetrear")
-
-            if not front_model or not rear_model or not front_angle or not rear_angle then print("wtf bro how did you do this") return false end
-
-            if not ValidateModel( front_model ) or not ValidateModel( rear_model ) then
-                local ply = self:GetOwner()
-                ply:PrintMessage( HUD_PRINTTALK, "selected wheel does not exist on the server")
-
-                return false
-            end
-
-            if ent.CustomWheels and ent.GhostWheels then
-                ent:SteerVehicle( 0 )
-
-                for i = 1, #ent.Wheels do
-                    local Wheel = ent.Wheels[ i ]
-                    if IsValid( Wheel ) then
-                        local physobj = Wheel:GetPhysicsObject()
-                        physobj:EnableMotion( true )
-                        physobj:Wake()
+                    if IsValid( wPObj ) then
+                        wPObj:EnableMotion( freezeWheels[i].dofreeze )
                     end
-                end
 
-                ent.Camber = camber
-                ApplyWheel(self:GetOwner(), ent, {front_model,front_angle,rear_model,rear_angle,camber})
-                SetWheelOffset( ent, front_offset, rear_offset )
+                    Wheel:SetPos( freezeWheels[ i ].pos )
+                    Wheel:SetAngles( freezeWheels[ i ].ang )
+                end
             end
+        end)
+    end )
 
-            timer.Simple( 0.25, function()
-                if not IsValid( ent ) then return end
-                if not IsValid( PhysObj ) then return end
-
-                PhysObj:EnableMotion( freezeWhenDone )
-                ent:SetNotSolid( false )
-                ent:SetPos( ResetPos )
-                ent:SetAngles( ResetAng )
-
-                for i = 1, #freezeWheels do
-                    local Wheel = ent.Wheels[ i ]
-                    if IsValid( Wheel ) then
-                        local wPObj = Wheel:GetPhysicsObject()
-
-                        Wheel:SetNotSolid( false )
-
-                        if IsValid( wPObj ) then
-                            wPObj:EnableMotion( freezeWheels[i].dofreeze )
-                        end
-
-                        Wheel:SetPos( freezeWheels[ i ].pos )
-                        Wheel:SetAngles( freezeWheels[ i ].ang )
-                    end
-                end
-            end)
-        end )
-    end
     return true
 end
 
