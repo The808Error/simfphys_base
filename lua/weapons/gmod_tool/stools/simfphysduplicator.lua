@@ -168,7 +168,6 @@ if CLIENT then
 				matches[#matches + 1] = name
 			end
 
-			-- Show search matches
 			fillList( ScrollPanel, matches )
 		end
 
