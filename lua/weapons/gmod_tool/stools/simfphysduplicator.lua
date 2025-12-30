@@ -72,7 +72,7 @@ if CLIENT then
 
 	local ITEM_OFFSET = 22
 
-	local CLR_ALPHA = 255
+	local CLR_ALPHA = 200
 	local CLR_SELECTED = Color( 0, 73, 120, CLR_ALPHA )
 	local CLR_NORMAL1 = Color( 108, 111, 114, CLR_ALPHA )
 	local CLR_NORMAL2 = Color( 77, 80, 82, CLR_ALPHA )
@@ -104,7 +104,7 @@ if CLIENT then
 
 			btn.Paint = function( self, w, h )
 				local clrNormal = self.highlight and CLR_NORMAL1 or CLR_NORMAL2
-				local clr = selectedItem == name and CLR_SELECTED or ( self:IsHovered() and CLR_HOVERED or clrNormal )
+				local clr = selectedItem == name and CLR_SELECTED or ( self:IsHovered() and CLR_HOVERED or clrNoraml )
 
 				draw.RoundedBox( 5, 1, 1, w - 2, h - 1, clr )
 			end
@@ -124,13 +124,15 @@ if CLIENT then
 	end
 
 	function TOOL.BuildCPanel( panel )
+		local WIDTH = 280
+
 		if not file.Exists( "saved_vehicles", "DATA" ) then
 			file.CreateDir( "saved_vehicles" )
 		end
 
 		local container = vgui.Create( "DPanel", panel )
 		container:SetPos( 10, 30 )
-		container:SetSize( 280, 350 )
+		container:SetSize( WIDTH, 350 )
 
 		do
 			local COLOR1 = Color( 115, 115, 115, 255 )
@@ -144,14 +146,14 @@ if CLIENT then
 
 		-- Vehicle list
 		local ScrollPanel = vgui.Create( "DScrollPanel", container )
-		ScrollPanel:SetSize( 280, 300 )
+		ScrollPanel:SetSize( WIDTH, 300 )
 		ScrollPanel:SetPos( 0, 20 )
 		
 		refreshList( ScrollPanel )
 
 		-- Search bar
 		local searchBar = vgui.Create( "DTextEntry", container )
-		searchBar:SetSize( 280, 20 )
+		searchBar:SetSize( WIDTH, 20 )
 		searchBar:SetPlaceholderText( "Search saved vehicles..." )
 
 		searchBar.OnEnter = function( _, prompt )
@@ -174,13 +176,13 @@ if CLIENT then
 		local saveBtn = vgui.Create( "DButton", panel )
 		saveBtn:SetText( "Save" )
 		saveBtn:SetPos( 10, 350)
-		saveBtn:SetSize( 280, 20 )
+		saveBtn:SetSize( WIDTH, 20 )
 		saveBtn.DoClick = function()
 			if not TOOLMemory.SpawnName then return end
 
 			local saveFrame = vgui.Create( "DFrame" )
 			saveFrame:SetPos( gui.MouseX() - 100,  gui.MouseY() - 30 )
-			saveFrame:SetSize( 280, 50 )
+			saveFrame:SetSize( WIDTH, 50 )
 			saveFrame:SetTitle( "Save As..." )
 			saveFrame:SetVisible( true )
 			saveFrame:ShowCloseButton( true )
@@ -236,7 +238,7 @@ if CLIENT then
 		local loadBtn = vgui.Create( "DButton", panel )
 		loadBtn:SetText( "Load" )
 		loadBtn:SetPos( 10, 370)
-		loadBtn:SetSize( 280, 20 )
+		loadBtn:SetSize( WIDTH, 20 )
 		loadBtn.DoClick = function( self )
 			if not selectedItem then return end
 
@@ -285,7 +287,7 @@ if CLIENT then
 		local deleteBtn = vgui.Create( "DButton", panel )
 		deleteBtn:SetText( "Delete" )
 		deleteBtn:SetPos( 10, 430)
-		deleteBtn:SetSize( 280, 20 )
+		deleteBtn:SetSize( WIDTH, 20 )
 		deleteBtn.DoClick = function( self )
 			if not selectedItem then return end
 
@@ -301,7 +303,7 @@ if CLIENT then
 		local refreshBtn = vgui.Create( "DButton", panel )
 		refreshBtn:SetText( "Refresh" )
 		refreshBtn:SetPos( 10, 390)
-		refreshBtn:SetSize( 280, 20 )
+		refreshBtn:SetSize( WIDTH, 20 )
 		refreshBtn.DoClick = function()
 			refreshList( ScrollPanel )
 		end

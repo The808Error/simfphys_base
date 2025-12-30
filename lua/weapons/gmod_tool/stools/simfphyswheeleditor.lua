@@ -69,10 +69,12 @@ local function SetWheelOffset( ent, offset_front, offset_rear )
 end
 
 local function ApplyWheel( ply, ent, data )
-    ent.CustomWheelAngleOffset = data[2]
-    ent.CustomWheelAngleOffset_R = data[4]
-
     if not IsValid( ent ) then return end
+
+    local frontWheelAng, rearWheelAng = data[2], data[4]
+
+    ent.CustomWheelAngleOffset = frontWheelAng
+    ent.CustomWheelAngleOffset_R = rearWheelAng
 
     for i = 1, #ent.GhostWheels do
         local wheel = ent.GhostWheels[i]
@@ -81,35 +83,34 @@ local function ApplyWheel( ply, ent, data )
         local isfrontwheel = ( i == 1 or i == 2 )
         local swap_y = ( i == 2 or i == 4 or i == 6 )
 
-        local angleoffset = isfrontwheel and ent.CustomWheelAngleOffset or ent.CustomWheelAngleOffset_R
+        local angleoffset = isfrontwheel and frontWheelAng or rearWheelAng
 
         local model = isfrontwheel and data[1] or data[3]
 
-        local fAng = ent:LocalToWorldAngles( ent.VehicleData.LocalAngForward )
-        local rAng = ent:LocalToWorldAngles( ent.VehicleData.LocalAngRight )
+        local fAng = ent.VehicleData.LocalAngForward
+        local rAng = ent.VehicleData.LocalAngRight
 
         local Forward = fAng:Forward()
         local Right = swap_y and -rAng:Forward() or rAng:Forward()
-        local Up = ent:GetUp()
+        local Up = Vector( 0, 0, 1 )
 
-        local camber = data[5] and tonumber( data[5] ) or 0
 
         local ghostAng = Right:Angle()
         local mirAng = swap_y and 1 or -1
         
-        --[[
-        ghostAng:RotateAroundAxis(Forward,angleoffset.p * mirAng)
-        ghostAng:RotateAroundAxis(Right,angleoffset.r * mirAng)
-        ghostAng:RotateAroundAxis(Up,-angleoffset.y)
+        ghostAng:RotateAroundAxis( Forward, angleoffset.p * mirAng )
+        ghostAng:RotateAroundAxis( Right, angleoffset.r * mirAng )
+        ghostAng:RotateAroundAxis( Up, -angleoffset.y )
 
-        ghostAng:RotateAroundAxis(Forward, camber * mirAng)
-        ]]
-        
+        -- Camber
+        local camber = data[5] and tonumber( data[5] ) or 0
+        ghostAng:RotateAroundAxis( Forward, camber * mirAng )
 
-        --local ghostAng = ent:
+        ghostAng = ent.Wheels[i]:LocalToWorldAngles( ghostAng )
 
         wheel:SetModelScale( 1 )
         wheel:SetModel( model )
+
         wheel:SetAngles( ghostAng )
 
         local wheelsize = wheel:OBBMaxs() - wheel:OBBMins()
@@ -218,7 +219,7 @@ function TOOL:LeftClick( trace )
     end
 
     if ent.CustomWheels and ent.GhostWheels then
-        ent:SteerVehicle( 0 )
+        --ent:SteerVehicle( 0 )
 
         --[[
         for i = 1, #ent.Wheels do
@@ -259,90 +260,21 @@ function TOOL:Reload( trace )
     if not simfphys.IsCar( ent ) then return false end
 
     if SERVER then
-        local PhysObj = ent:GetPhysicsObject()
-        if not IsValid( PhysObj ) then return end
+        local VehicleList = list.Get( "simfphys_vehicles" )[ent:GetSpawn_List()]
+        
+        local front_model = VehicleList.Members.CustomWheelModel
+        local front_angle = VehicleList.Members.CustomWheelAngleOffset
+        local rear_model = VehicleList.Members.CustomWheelModel_R and VehicleList.Members.CustomWheelModel_R or front_model
+        local rear_angle = VehicleList.Members.CustomWheelAngleOffset
 
-        local freezeWhenDone = PhysObj:IsMotionEnabled()
-        local freezeWheels = {}
-        PhysObj:EnableMotion( false )
-        ent:SetNotSolid( true )
-
-        local ResetPos = ent:GetPos()
-        local ResetAng = ent:GetAngles()
-
-        ent:SetPos( ResetPos + Vector(0,0,30) )
-        ent:SetAngles( Angle(0,ResetAng.y,0) )
-
-        for i = 1, #ent.Wheels do
-            local Wheel = ent.Wheels[ i ]
-            if IsValid( Wheel ) then
-                local wPObj = Wheel:GetPhysicsObject()
-
-                if IsValid( wPObj ) then
-                    freezeWheels[ i ] = {}
-                    freezeWheels[ i ].dofreeze = wPObj:IsMotionEnabled()
-                    freezeWheels[ i ].pos = Wheel:GetPos()
-                    freezeWheels[ i ].ang = Wheel:GetAngles()
-                    Wheel:SetNotSolid( true )
-                    wPObj:EnableMotion( true )
-                    wPObj:Wake()
-                end
-            end
-        end
-
-        timer.Simple( 0.25, function()
-            if not IsValid( ent ) then return end
-
-            local vname = ent:GetSpawn_List()
-            local VehicleList = list.Get( "simfphys_vehicles" )[vname]
-
-            if ent.CustomWheels and ent.GhostWheels then
-                ent:SteerVehicle( 0 )
-
-                for i = 1, #ent.Wheels do
-                    local Wheel = ent.Wheels[ i ]
-                    if IsValid( Wheel ) then
-                        local physobj = Wheel:GetPhysicsObject()
-                        physobj:EnableMotion( true )
-                        physobj:Wake()
-                    end
-                end
-
-                local front_model = VehicleList.Members.CustomWheelModel
-                local front_angle = VehicleList.Members.CustomWheelAngleOffset
-                local rear_model = VehicleList.Members.CustomWheelModel_R and VehicleList.Members.CustomWheelModel_R or front_model
-                local rear_angle = VehicleList.Members.CustomWheelAngleOffset
-
-                ApplyWheel(self:GetOwner(), ent, {front_model,front_angle,rear_model,rear_angle})
-                SetWheelOffset( ent, 0, 0 )
-            end
-
-            timer.Simple( 0.25, function()
-                if not IsValid( ent ) then return end
-                if not IsValid( PhysObj ) then return end
-
-                PhysObj:EnableMotion( freezeWhenDone )
-                ent:SetNotSolid( false )
-                ent:SetPos( ResetPos )
-                ent:SetAngles( ResetAng )
-
-                for i = 1, #freezeWheels do
-                    local Wheel = ent.Wheels[ i ]
-                    if IsValid( Wheel ) then
-                        local wPObj = Wheel:GetPhysicsObject()
-
-                        Wheel:SetNotSolid( false )
-
-                        if IsValid( wPObj ) then
-                            wPObj:EnableMotion( freezeWheels[i].dofreeze )
-                        end
-
-                        Wheel:SetPos( freezeWheels[ i ].pos )
-                        Wheel:SetAngles( freezeWheels[ i ].ang )
-                    end
-                end
-            end)
-        end)
+        ApplyWheel( self:GetOwner(), ent, {
+            front_model,
+            front_angle,
+            rear_model,
+            rear_angle
+        } )
+        
+        SetWheelOffset( ent, 0, 0 )
     end
 
     return true
