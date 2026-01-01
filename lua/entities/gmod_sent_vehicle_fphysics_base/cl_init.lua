@@ -77,11 +77,10 @@ end
 
 function ENT:SetPoseParameters( curtime )
 	local selfTable = self:GetTable()
-
-	selfTable.sm_vSteer = selfTable.sm_vSteer and selfTable.sm_vSteer + ( self:GetVehicleSteer() - selfTable.sm_vSteer ) * 0.3 or 0
+	selfTable.sm_vSteer = selfTable.sm_vSteer and selfTable.sm_vSteer + (self:GetVehicleSteer() - selfTable.sm_vSteer) * 0.3 or 0
 	self:SetPoseParameter("vehicle_steer", selfTable.sm_vSteer  )
 
-	if not selfTable.pp_data then
+	if not istable( selfTable.pp_data ) then
 		selfTable.ppNextCheck = selfTable.ppNextCheck or curtime + 0.5
 		if selfTable.ppNextCheck < curtime and not selfTable.CustomWheels then
 			selfTable.ppNextCheck = curtime + 0.5
@@ -90,15 +89,17 @@ function ENT:SetPoseParameters( curtime )
 				net.WriteEntity( self )
 			net.SendToServer()
 		end
-	elseif not selfTable.CustomWheels then
-		for i = 1, #selfTable.pp_data do
-			local wheel = selfTable.pp_data[i].entity
+	else
+		if not selfTable.CustomWheels then
+			for i = 1, #selfTable.pp_data do
+				local Wheel = selfTable.pp_data[i].entity
 
-			if IsValid( wheel ) then
-				local addPos = wheel:GetDamaged() and selfTable.pp_data[i].dradius or 0
+				if IsValid( Wheel ) then
+					local addPos = Wheel:GetDamaged() and selfTable.pp_data[i].dradius or 0
 
-				local Pose = (selfTable.pp_data[i].pos - self:WorldToLocal( wheel:GetPos()).z + addPos ) / selfTable.pp_data[i].travel
-				self:SetPoseParameter( selfTable.pp_data[i].name, Pose )
+					local Pose = (selfTable.pp_data[i].pos - self:WorldToLocal( Wheel:GetPos()).z + addPos ) / selfTable.pp_data[i].travel
+					self:SetPoseParameter( selfTable.pp_data[i].name, Pose )
+				end
 			end
 		end
 	end

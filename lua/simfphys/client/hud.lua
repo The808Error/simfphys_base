@@ -787,7 +787,7 @@ hook.Add("HUDPaint", "simfphys_vehicleditorinfo", function()
 
 	local vInfo = Ent:GetVehicleInfo()
 
-	if not vInfo or not vInfo["maxspeed"] or not vInfo["horsepower"] or not vInfo["weight"] or not vInfo["torque"] then return end
+	if not istable( vInfo ) or not vInfo["maxspeed"] or not vInfo["horsepower"] or not vInfo["weight"] or not vInfo["torque"] then return end
 
 	local SpeedMul = Hudmph and (Hudreal and 0.0568182 or 0.0568182 * 0.75) or (Hudreal and 0.09144 or 0.09144 * 0.75)
 	local SpeedSuffix = Hudmph and "mph" or "km/h"
