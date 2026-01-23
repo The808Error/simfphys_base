@@ -1,12 +1,12 @@
-ENT.Type            = "anim"
+ENT.Type = "anim"
 
 ENT.PrintName = "Comedy Effect"
 ENT.Author = "Blu"
 ENT.Information = ""
 ENT.Category = "Fun + Games"
 
-ENT.Spawnable       = false
-ENT.AdminSpawnable  = false
+ENT.Spawnable = false
+ENT.AdminSpawnable = false
 
 ENT.AutomaticFrameAdvance = true
 ENT.RenderGroup = RENDERGROUP_BOTH
@@ -151,18 +151,23 @@ end
 
 function ENT:GetPassengerSeats()
 	if not istable( self.pSeat ) then
-		self.pSeat = {}
+		local seats = {}
+		self.pSeat = seats
 
-		local DriverSeat = self:GetDriverSeat()
+		local driverSeat = self:GetDriverSeat()
+		local children = self:GetChildren()
 
-		for _, v in pairs( self:GetChildren() ) do
-			if v ~= DriverSeat and v:GetClass():lower() == "prop_vehicle_prisoner_pod" then
-				table.insert( self.pSeat, v )
+		for i = 1, #children do
+			local ent = children[i]
+			if ent == driverSeat the continue end
+
+			if ent:GetClass():lower() == "prop_vehicle_prisoner_pod" then
+				seats[#seats + 1] = ent
 			end
 		end
 	end
 
-	return self.pSeat
+	return self.pSeats
 end
 
 function ENT:GetVehicleClass()
