@@ -159,15 +159,15 @@ function ENT:GetPassengerSeats()
 
 		for i = 1, #children do
 			local ent = children[i]
-			if ent == driverSeat the continue end
+			if ent == driverSeat then continue end
 
-			if ent:GetClass():lower() == "prop_vehicle_prisoner_pod" then
+			if ent:GetClass() == "prop_vehicle_prisoner_pod" then
 				seats[#seats + 1] = ent
 			end
 		end
 	end
 
-	return self.pSeats
+	return self.pSeat
 end
 
 function ENT:GetVehicleClass()
