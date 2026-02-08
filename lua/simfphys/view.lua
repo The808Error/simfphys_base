@@ -86,7 +86,7 @@ hook.Add("StartCommand", "simfphys_lockview", function(ply, ucmd)
 
 	if not IsValid( vehiclebase ) then return end
 
-	if not ply:GetInfoNum( "cl_simfphys_mousesteer", 0 ) == 1 then return end
+	if ply:GetInfoNum( "cl_simfphys_mousesteer", 0 ) == 0 then return end
 
 	local ang = ucmd:GetViewAngles()
 

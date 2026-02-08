@@ -1,33 +1,15 @@
-local function lockControls( bLock )
-	local lp = LocalPlayer()
-	if not lp:InVehicle() then return end
-	if not lp:IsDrivingSimfphys() then return end
+-- Is our mouse visible?
+local previousState = false 
 
+timer.Create( "simfphys_mouseStateCheck", 0.25, 0, function()
+	if not LocalPlayer():InVehicle() then return end
+
+	local current = vgui.CursorVisible()
+	if current == previousState then return end
+
+	previousState = current
+	
 	net.Start( "simfphys_blockcontrols" )
-		net.WriteBool( bLock )
+	net.WriteBool( current )
 	net.SendToServer()
-end
-
-hook.Add( "OnContextMenuOpen", "simfphys_seatswitching_cmenuopen", function()
-	lockControls( true )
-end )
-
-hook.Add( "OnContextMenuClose", "simfphys_seatswitching_cmenuclose", function()
-	lockControls( false )
-end )
-
-hook.Add( "OnSpawnMenuOpen", "simfphys_seatswitching_menuopen", function()
-	lockControls( true )
-end )
-
-hook.Add( "OnSpawnMenuClose", "simfphys_seatswitching_menuclose", function()
-	lockControls( false )
-end )
-
-hook.Add( "FinishChat", "simfphys_seatswitching_chatend", function()
-	lockControls( false )
-end )
-
-hook.Add( "StartChat", "simfphys_seatswitching_chatstart", function()
-	lockControls( true )
 end )

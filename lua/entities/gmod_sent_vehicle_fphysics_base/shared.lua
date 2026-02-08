@@ -206,7 +206,7 @@ function ENT:GetSeatAnimation( ply )
 		return -1
 	end
 
-	local pSeatTBL = self.PassengerSeats[ Pod:GetNWInt( "pPodIndex", -1 ) - 1 ]
+	local pSeatTBL = self.PassengerSeats[Pod:GetNWInt( "pPodIndex", -1 ) - 1]
 
 	if not pSeatTBL then return -1 end -- not taking any chances
 

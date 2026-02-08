@@ -22,6 +22,11 @@ net.Receive( "simfphys_blockcontrols", function( _, ply )
 	ply.blockcontrols = net.ReadBool()
 end )
 
+hook.Add( "PlayerEnteredVehicle", "simfphys_unblockControls", function( ply )
+	ply.blockcontrols = false
+end )
+
+
 hook.Add( "PlayerButtonDown", "!!!simfphysButtonDown", function( ply, button )
 	local vehicle = ply:GetSimfphys()
 
@@ -45,7 +50,7 @@ hook.Add( "PlayerButtonDown", "!!!simfphysButtonDown", function( ply, button )
 			ply:ExitVehicle()
 			ply:EnterVehicle( driverSeat )
 
-			ply:SetEyeAngles( Angle( 0, vehicle:GetAngles().y - driverSeat:GetAngles().y, 0 ) )
+			--ply:SetEyeAngles( Angle( 0, vehicle:GetAngles().y - driverSeat:GetAngles().y, 0 ) )
 		end
 	else
 		-- Switch to passenger seat

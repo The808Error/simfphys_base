@@ -35,7 +35,7 @@ hook.Add("CalcMainActivity", "simfphysSeatActivityOverride", function(ply)
 end)
 
 if CLIENT then
-	hook.Add("UpdateAnimation", "simfphysPoseparameters", function(ply , vel, seq)
+	hook.Add( "UpdateAnimation", "simfphysPoseparameters", function( ply , vel )
 		if not ply:IsDrivingSimfphys() then return end
 
 		local Car, inVehicle = ply:GetSimfphys()
@@ -52,5 +52,5 @@ if CLIENT then
 		GAMEMODE:MouthMoveAnimation( ply )
 
 		return true
-	end)
+	end )
 end
