@@ -80,7 +80,7 @@ function ENT:SetPoseParameters( curtime )
 	selfTable.sm_vSteer = selfTable.sm_vSteer and selfTable.sm_vSteer + (self:GetVehicleSteer() - selfTable.sm_vSteer) * 0.3 or 0
 	self:SetPoseParameter("vehicle_steer", selfTable.sm_vSteer  )
 
-	if not istable( selfTable.pp_data ) then
+	if not selfTable.pp_data then
 		selfTable.ppNextCheck = selfTable.ppNextCheck or curtime + 0.5
 		if selfTable.ppNextCheck < curtime and not selfTable.CustomWheels then
 			selfTable.ppNextCheck = curtime + 0.5

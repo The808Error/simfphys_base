@@ -1,5 +1,5 @@
 
-local Materials = {
+local MATERIALS = {
 	"particle/smokesprites_0001",
 	"particle/smokesprites_0002",
 	"particle/smokesprites_0003",
@@ -28,7 +28,7 @@ function EFFECT:Init( data )
 
 	local emitter = ParticleEmitter( Pos, false )
 
-	local particle = emitter:Add( Materials[math.Round(math.Rand(1,table.Count( Materials )),0)], Pos )
+	local particle = emitter:Add( MATERIALS[math.random( #MATERIALS )], Pos )
 
 	if particle then
 		particle:SetVelocity( VectorRand() * 100 + Vector(0,0,math.min(Vel,600) ) )

@@ -1,5 +1,5 @@
 
-local Materials = {
+local MATERIALS = {
 	"particle/smokesprites_0001",
 	"particle/smokesprites_0002",
 	"particle/smokesprites_0003",
@@ -84,7 +84,7 @@ function EFFECT:Init( data )
 						particle1:SetCollide( false )
 					end
 
-					local particle2 = emitter:Add( Materials[ math.Round( math.Rand(1, table.Count( Materials ) ) , 0 ) ], Pos )
+					local particle2 = emitter:Add( MATERIALS[math.random( #MATERIALS )], Pos )
 
 					if particle2 then
 						particle2:SetVelocity( Vel + Ang:Forward() * (10 + Vel:Length() / 20) )
@@ -98,7 +98,7 @@ function EFFECT:Init( data )
 					end
 
 					if bdamaged then
-						local particle3 = emitter:Add( Materials[ math.Round( math.Rand(1, table.Count( Materials ) ) , 0 ) ], Pos )
+						local particle3 = emitter:Add( MATERIALS[math.random( #MATERIALS )], Pos )
 
 						if particle3 then
 							particle3:SetVelocity( Vel + Ang:Forward() * math.random(30,60) )

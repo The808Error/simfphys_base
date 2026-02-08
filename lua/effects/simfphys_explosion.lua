@@ -1,5 +1,5 @@
 
-local Materials = {
+local MATERIALS = {
 	"particle/smokesprites_0001",
 	"particle/smokesprites_0002",
 	"particle/smokesprites_0003",
@@ -39,7 +39,7 @@ function EFFECT:Explosion( pos )
 
 	if emitter then
 		for i = 0,60 do
-			local particle = emitter:Add( Materials[math.random(1,table.Count( Materials ))], pos )
+			local particle = emitter:Add( MATERIALS[math.random( #MATERIALS )], pos )
 
 			if particle then
 				particle:SetVelocity( VectorRand() * 800 )
@@ -72,7 +72,7 @@ function EFFECT:Explosion( pos )
 		end
 
 		for i = 0,36 do
-			local particle = emitter:Add( Materials[math.Round(math.Rand(1,table.Count( Materials )),0)], pos )
+			local particle = emitter:Add( MATERIALS[math.random( #MATERIALS )], pos )
 
 			if particle then
 				local ang = i * 10

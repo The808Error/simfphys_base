@@ -702,7 +702,7 @@ hook.Add( "PopulateVehicles", "!!!add_simfphys_to_vehicles", function( pnlConten
 	end
 
 	-- JOYSTICK
-	if istable( jcon ) and file.Exists("lua/bin/gmcl_joystick_win32.dll", "GAME") then
+	if jcon and file.Exists("lua/bin/gmcl_joystick_win32.dll", "GAME") then
 
 		local node = tree:AddNode( "Joystick Configuration", "icon16/joystick.png" )
 		node.DoClick = function( self )

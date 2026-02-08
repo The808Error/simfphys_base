@@ -8,9 +8,9 @@ ENT.Spawnable = true
 ENT.AdminOnly = false
 
 function ENT:SetupDataTables()
-	self:NetworkVar( "Entity",0, "User" )
-	self:NetworkVar( "Bool",0, "Active" )
-	self:NetworkVar( "Float",0, "FuelUsed" )
+	self:NetworkVar( "Entity", 0, "User" )
+	self:NetworkVar( "Bool", 0, "Active" )
+	self:NetworkVar( "Float", 0, "FuelUsed" )
 
 	if SERVER then
 		self:NetworkVarNotify( "Active", self.OnActiveChanged )

@@ -319,10 +319,6 @@ function ENT:ResetJoystick()
 end
 
 function ENT:SetValues()
-	if WireLib then
-		self:createWireIO()
-	end
-
 	self:SetGear( 2 )
 
 	self.EnableSuspension = 0
@@ -375,6 +371,10 @@ function ENT:SetValues()
 	end
 
 	self.VehicleData[ "Steer" ] = 0
+
+	if WireLib then
+		self:createWireIO()
+	end
 end
 
 function ENT:WriteVehicleDataTable()
@@ -384,7 +384,7 @@ function ENT:WriteVehicleDataTable()
 	self:SetPoseParameter( "vehicle_wheel_rl_height", 0 )
 	self:SetPoseParameter( "vehicle_wheel_rr_height", 0 )
 
-	timer.Simple( 0.1, function()
+	timer.Simple( 0, function()
 		if not IsValid( self ) then return end
 
 		self.posepositions["Pose1_Steerangle"] = self.CustomWheels and Angle() or self:GetAttachment( self:LookupAttachment( "wheel_fl" ) ).Ang

@@ -47,6 +47,9 @@ local ms_deadzone = 1.5
 local ms_exponent = 2
 local ms_key_freelook = KEY_Y
 
+
+local IsValid = IsValid
+
 cvars.AddChangeCallback( "cl_simfphys_hud", function( convar, oldValue, newValue ) ShowHud = tonumber( newValue )~=0 end)
 cvars.AddChangeCallback( "cl_simfphys_hud_offset_x", function( convar, oldValue, newValue ) hudoffset_x = newValue end)
 cvars.AddChangeCallback( "cl_simfphys_hud_offset_y", function( convar, oldValue, newValue ) hudoffset_y = newValue end)
@@ -787,7 +790,7 @@ hook.Add("HUDPaint", "simfphys_vehicleditorinfo", function()
 
 	local vInfo = Ent:GetVehicleInfo()
 
-	if not istable( vInfo ) or not vInfo["maxspeed"] or not vInfo["horsepower"] or not vInfo["weight"] or not vInfo["torque"] then return end
+	if not vInfo or not vInfo["maxspeed"] or not vInfo["horsepower"] or not vInfo["weight"] or not vInfo["torque"] then return end
 
 	local SpeedMul = Hudmph and (Hudreal and 0.0568182 or 0.0568182 * 0.75) or (Hudreal and 0.09144 or 0.09144 * 0.75)
 	local SpeedSuffix = Hudmph and "mph" or "km/h"
@@ -796,7 +799,7 @@ hook.Add("HUDPaint", "simfphys_vehicleditorinfo", function()
 	local TopSpeed = math.Round( vInfo["maxspeed"] * SpeedMul )
 	local HP = math.Round( vInfo["horsepower"] * toSize )
 	local Weight = math.Round( vInfo["weight"] )
-	local PowerToWeight = math.Round(Weight / HP,1)
+	local PowerToWeight = math.Round( Weight / HP, 1 )
 	local PeakTorque = math.Round( vInfo["torque"] * toSize )
 
 	local text = string.format( VEHICLE_STATS, HP, PeakTorque, TopSpeed, SpeedSuffix, Weight, PowerToWeight )

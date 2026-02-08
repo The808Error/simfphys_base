@@ -60,7 +60,7 @@ function ENT:HurtPlayers( damage )
 		Driver:TakeDamageInfo( dmginfo )
 	end
 
-	if not istable( self.PassengerSeats ) then return end
+	if not self.PassengerSeats then return end
 
 	for i = 1, #self.PassengerSeats do
 		local seat = self.pSeat[i]

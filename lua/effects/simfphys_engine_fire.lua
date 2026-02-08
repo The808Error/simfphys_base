@@ -1,4 +1,4 @@
-local Materials = {
+local MATERIALS = {
 	"particle/smokesprites_0001",
 	"particle/smokesprites_0002",
 	"particle/smokesprites_0003",
@@ -36,12 +36,12 @@ function EFFECT:DoFX( pos, vel )
 	local emitter = ParticleEmitter( pos, false )
 
 	if emitter then
-		local particle = emitter:Add( Materials[math.Round(math.Rand(1,table.Count( Materials )),0)], pos )
+		local particle = emitter:Add( MATERIALS[math.random( #MATERIALS )], pos )
 
-		local vz = math.min(vel:Length(),600)
+		local vz = math.min( vel:Length(), 600 )
 
 		if particle then
-			particle:SetVelocity( VectorRand() * 5 + Vector(0,0,40 + vz) + vel * 0.1 )
+			particle:SetVelocity( VectorRand() * 5 + Vector( 0, 0, 40 + vz ) + vel * 0.1 )
 			particle:SetDieTime( 1 )
 			particle:SetAirResistance( vz )
 			particle:SetStartAlpha( 100 )

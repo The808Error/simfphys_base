@@ -1,5 +1,4 @@
-
-local Materials = {
+local MATERIALS = {
 	"particle/smokesprites_0001",
 	"particle/smokesprites_0002",
 	"particle/smokesprites_0003",
@@ -37,7 +36,7 @@ function EFFECT:Init( data )
 
 				local OffsetPos = OffsetPos + Ran * 0.4 + Vector(0,0,-WheelSize * 0.8)
 
-				local particle = emitter:Add( Materials[math.Round(math.Rand(1, table.Count(Materials) ),0)], OffsetPos )
+				local particle = emitter:Add( MATERIALS[math.random( #MATERIALS )], OffsetPos )
 
 				local Mul = 0.3 + Mul * 0.05
 
@@ -61,8 +60,8 @@ function EFFECT:Init( data )
 		else
 			local OffsetPos2 = OffsetPos + Ran * 0.4 + Vector(0,0,-WheelSize)
 
-			local particle1 = emitter:Add( Materials[math.Round(math.Rand(1, table.Count(Materials) ),0)], OffsetPos )
-			local particle2 = emitter:Add( Materials[math.Round(math.Rand(1, table.Count(Materials) ),0)], OffsetPos2 )
+			local particle1 = emitter:Add( MATERIALS[math.random( #MATERIALS )], OffsetPos )
+			local particle2 = emitter:Add( MATERIALS[math.random( #MATERIALS )], OffsetPos2 )
 
 			if particle1 then
 				particle1:SetVelocity( Vector(0,0,-50) )

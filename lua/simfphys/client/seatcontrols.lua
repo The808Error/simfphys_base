@@ -25,7 +25,6 @@ hook.Add( "OnSpawnMenuClose", "simfphys_seatswitching_menuclose", function()
 end )
 
 hook.Add( "FinishChat", "simfphys_seatswitching_chatend", function()
-	if not IsValid( LocalPlayer() ) then return end
 	lockControls( false )
 end )
 

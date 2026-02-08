@@ -38,35 +38,24 @@ hook.Add( "PlayerButtonDown", "!!!simfphysButtonDown", function( ply, button )
 			end
 		elseif not IsValid( driver ) then
 			-- Switching to the driver seat
-			ply:ExitVehicle()
-
+			
 			local driverSeat = vehicle:GetDriverSeat()
 			if not IsValid( driverSeat ) then return end
 
-			timer.Simple( FrameTime(), function()
-				if not IsValid( vehicle ) or not IsValid( ply ) then return end
-				if IsValid( vehicle:GetDriver() ) or not IsValid( driverSeat ) then return end
+			ply:ExitVehicle()
+			ply:EnterVehicle( driverSeat )
 
-				ply:EnterVehicle( driverSeat )
-
-				timer.Simple( FrameTime() * 2, function()
-					if not IsValid( ply ) or not IsValid( vehicle ) then return end
-					ply:SetEyeAngles( Angle( 0, vehicle:GetAngles().y, 0 ) )
-				end )
-			end )
+			ply:SetEyeAngles( Angle( 0, vehicle:GetAngles().y - driverSeat:GetAngles().y, 0 ) )
 		end
 	else
+		-- Switch to passenger seat
 		for _, pod in ipairs( vehicle:GetPassengerSeats() ) do
 			if not IsValid( pod ) then continue end
-			if pod:GetNWInt( "pPodIndex", 3 ) == simfphys.pSwitchKeys[button] and not IsValid( pod:GetDriver() ) then
+			if IsValid( pod:GetDriver() ) then continue end
+
+			if pod:GetNWInt( "pPodIndex", 3 ) == simfphys.pSwitchKeys[button] then
 				ply:ExitVehicle()
-
-				timer.Simple( FrameTime(), function()
-					if not IsValid( pod ) or not IsValid( ply ) then return end
-					if IsValid( pod:GetDriver() ) then return end
-
-					ply:EnterVehicle( pod )
-				end )
+				ply:EnterVehicle( pod )
 			end
 		end
 	end

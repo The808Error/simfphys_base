@@ -1,5 +1,5 @@
 
-local Materials = {
+local MATERIALS = {
 	"particle/smokesprites_0001",
 	"particle/smokesprites_0002",
 	"particle/smokesprites_0003",
@@ -38,7 +38,7 @@ function EFFECT:Init( data )
 			local MaxHealth = Entity:GetMaxHealth()
 			local Health = Entity:GetCurHealth()
 
-			local particle = emitter:Add( Materials[ math.Round( math.Rand(1, table.Count( Materials ) ) , 0 ) ], Pos )
+			local particle = emitter:Add( MATERIALS[ math.Round( math.random( #MATERIALS )) ], Pos )
 			local cAdd = (1 - (Health / MaxHealth)) * 100
 			local cInt = math.Clamp(100 - 40 * Size,0,255)
 			local rand = Vector( math.random(-1,1), math.random(-1,1), math.random(-1,1) ) * 0.25

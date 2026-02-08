@@ -22,19 +22,19 @@ local function EntityLookup( createdEntities )
 end
 
 function ENT:ApplyDupeInfo( ply, ent, info, GetEntByID )
-	if istable( WireLib ) then
+	if WireLib then
 		WireLib.ApplyDupeInfo( ply, ent, info, GetEntByID )
 	end
 end
 
 function ENT:PreEntityCopy()
-	if istable( WireLib ) then
+	if WireLib then
 		duplicator.StoreEntityModifier( self, "WireDupeInfo", WireLib.BuildDupeInfo(self) )
 	end
 end
 
 function ENT:PostEntityPaste(Player,Ent,CreatedEntities)
-	if istable( WireLib ) then
+	if WireLib then
 		if Ent.EntityMods and Ent.EntityMods.WireDupeInfo then
 			WireLib.ApplyDupeInfo(Player, Ent, Ent.EntityMods.WireDupeInfo, EntityLookup(CreatedEntities))
 		end
@@ -76,7 +76,7 @@ function ENT:Think()
 		self:ControlLighting( Time )
 		self:ControlHorn()
 
-		if istable( WireLib ) then
+		if WireLib then
 			self:UpdateWireOutputs()
 		end
 
@@ -248,7 +248,7 @@ function ENT:TriggerInput( name, value )
 		end
 	end
 
-	if name == "Eject Passengers" and istable( self.pSeat ) then
+	if name == "Eject Passengers" and self.pSeat then
 		for i = 1, #self.pSeat do
 			local seat = self.pSeat[i]
 			if not IsValid( seat ) then continue end
@@ -375,7 +375,7 @@ function ENT:OnActiveChanged( name, old, new )
 	end
 
 
-	if not istable( self.Wheels ) then return end
+	if not self.Wheels then return end
 
 	for i = 1, #self.Wheels do
 		local wheel = self.Wheels[ i ]
@@ -887,7 +887,7 @@ function ENT:PlayerSteerVehicle( ply, left, right )
 	local fastspeedangle
 	local extrasmooth = false
 
-	if istable( self.cl_SteerSettings ) and self.cl_SteerSettings.Overwrite then
+	if self.cl_SteerSettings and self.cl_SteerSettings.Overwrite then
 		TurnSpeed = self.cl_SteerSettings.TurnSpeed
 		fadespeed = self.cl_SteerSettings.fadespeed
 		fastspeedangle = self.cl_SteerSettings.fastspeedangle
@@ -952,8 +952,8 @@ function ENT:ForceLightsOff()
 end
 
 function ENT:EnteringSequence( ply )
-	local LinkedDoorAnims = istable(self.ModelInfo) and istable(self.ModelInfo.LinkDoorAnims)
-	if not istable(self.Enterpoints) and not LinkedDoorAnims then return end
+	local LinkedDoorAnims = self.ModelInfo and self.ModelInfo.LinkDoorAnims
+	if not self.Enterpoints and not LinkedDoorAnims then return end
 
 	local sequence
 	local pos

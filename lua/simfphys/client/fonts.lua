@@ -1,9 +1,17 @@
-surface.CreateFont( "simfphysworldtip", {font="coolvetica", size=24, weight=500, antialias=true, additive=false} )
+surface.CreateFont( "simfphysworldtip", {
+	font = "coolvetica",
+	size = 24,
+	weight = 500,
+	antialias = true,
+	additive = false
+} )
+
+local FONT_SIZE = ScrH() >= 900 and ( ScrH() >= 1080 and 20 or 18 ) or 12
 
 surface.CreateFont( "simfphysfont", {
 	font = "Verdana",
 	extended = false,
-	size = ScrH() >= 900 and (ScrH() >= 1080 and 20 or 18) or 12,
+	size = FONT_SIZE,
 	weight = 500,
 	blursize = 0,
 	scanlines = 0,
@@ -18,9 +26,10 @@ surface.CreateFont( "simfphysfont", {
 	outline = false,
 } )
 
-surface.CreateFont( "simfphysfont2", {font = "Verdana",
+surface.CreateFont( "simfphysfont2", {
+	font = "Verdana",
 	extended = false,
-	size = (ScrH() >= 900 and (ScrH() >= 1080 and 20 or 18) or 12) * 2.8,
+	size = FONT_SIZE * 2.8,
 	weight = 500,
 	blursize = 0,
 	scanlines = 0,
@@ -38,7 +47,7 @@ surface.CreateFont( "simfphysfont2", {font = "Verdana",
 surface.CreateFont( "simfphysfont3", {
 	font = "Verdana",
 	extended = false,
-	size = (ScrH() >= 900 and (ScrH() >= 1080 and 20 or 18) or 12) * 1.3,
+	size = FONT_SIZE * 1.3,
 	weight = 500,
 	blursize = 0,
 	scanlines = 0,
@@ -56,7 +65,7 @@ surface.CreateFont( "simfphysfont3", {
 surface.CreateFont( "simfphysfont4", {
 	font = "Verdana",
 	extended = false,
-	size = (ScrH() >= 900 and (ScrH() >= 1080 and 20 or 18) or 12) * 5.7,
+	size = FONT_SIZE * 5.7,
 	weight = 500,
 	blursize = 0,
 	scanlines = 0,
