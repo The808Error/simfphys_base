@@ -194,6 +194,8 @@ local function ManageProjTextures()
             continue
         end
 
+        if ent:IsDormant() then continue end
+
 
         entTable = ent:GetTable()
         vel = ent:GetVelocity() * frametime
@@ -216,7 +218,7 @@ local function ManageProjTextures()
             local trigger = entTable.triggers[proj.trigger]
             local enable = entTable.triggers[1] or trigger
 
-            if proj.Damaged or (proj.trigger == 2 and not FrontProjectedLights) or (proj.trigger == 4 and not RearProjectedLights) then
+            if proj.Damaged or ( proj.trigger == 2 and not FrontProjectedLights ) or ( proj.trigger == 4 and not RearProjectedLights ) then
                 trigger = false
                 enable = false
             end
@@ -232,7 +234,7 @@ local function ManageProjTextures()
 
                 if enable then
                     proj.istriggered = trigger
-                    local brightness = (trigger and proj.ontrigger.brightness) or proj.brightness
+                    local brightness = ( trigger and proj.ontrigger.brightness ) or proj.brightness
 
                     local lamp = ProjectedTexture()
                     lamp:SetBrightness( brightness )
@@ -766,85 +768,71 @@ local CLR_EMPTY = Color( 0, 0, 0, 0 )
 
 local function DrawEMSLights( ent )
     local time = CurTime()
+    local lightsEMS = ent.LightsEMS
 
-    if not ent.LightsEMS then return end
+    if not lightsEMS then return end
 
-    for i = 1, #ent.LightsEMS do
-        if not ent.LightsEMS[i].Damaged then
+    for i = 1, #lightsEMS do
+        if lightsEMS[i].Damaged then continue end
 
-            local size = ent.LightsEMS[i].size
-            local LightPos = ent:LocalToWorld( ent.LightsEMS[i].pos )
-            local visible = util.PixelVisible( LightPos, 4, ent.PixVisEMS[i] )
-            local mat = ent.LightsEMS[i].material
-            local numcolors = table.Count( ent.LightsEMS[i].Colors )
+        local size = lightsEMS[i].size
+        local LightPos = ent:LocalToWorld( lightsEMS[i].pos )
+        local visible = util.PixelVisible( LightPos, 4, ent.PixVisEMS[i] )
+        local mat = lightsEMS[i].material
+        local numcolors = table.Count( lightsEMS[i].Colors )
 
-            ent.LightsEMS[i].timer = ent.LightsEMS[i].timer or 0
-            ent.LightsEMS[i].Index = ent.LightsEMS[i].Index or 0
+        lightsEMS[i].timer = lightsEMS[i].timer or 0
+        lightsEMS[i].Index = lightsEMS[i].Index or 0
 
-            if numcolors > 1 then
+        if numcolors > 1 then
 
-                if ent.LightsEMS[i].timer < time then
+            if lightsEMS[i].timer < time then
 
-                    ent.LightsEMS[i].timer = time + ent.LightsEMS[i].Speed
-                    ent.LightsEMS[i].Index = ent.LightsEMS[i].Index + 1
+                lightsEMS[i].timer = time + lightsEMS[i].Speed
+                lightsEMS[i].Index = lightsEMS[i].Index + 1
 
-                    if ent.LightsEMS[i].Index > numcolors then
-                        ent.LightsEMS[i].Index = 1
-                    end
+                if lightsEMS[i].Index > numcolors then
+                    lightsEMS[i].Index = 1
                 end
             end
+        end
 
-            local col = ent.LightsEMS[i].Colors[ent.LightsEMS[i].Index]
+        local col = lightsEMS[i].Colors[lightsEMS[i].Index]
 
-            if ent.LightsEMS[i].OnBodyGroups then
-                visible = ent:BodyGroupIsValid( ent.LightsEMS[i].OnBodyGroups ) and visible or 0
-            end
+        if lightsEMS[i].OnBodyGroups then
+            visible = ent:BodyGroupIsValid( lightsEMS[i].OnBodyGroups ) and visible or 0
+        end
 
-            if visible and visible >= 0.6 and col ~= CLR_EMPTY then
-                visible = ( visible - 0.6 ) / 0.4
+        if visible and visible >= 0.6 and col ~= CLR_EMPTY then
+            visible = ( visible - 0.6 ) / 0.4
 
-                render.SetMaterial( mat )
-                render.DrawSprite( LightPos, size, size,  Color( col.r, col.g, col.b,  col.a * visible ) )
-            end
+            render.SetMaterial( mat )
+            render.DrawSprite( LightPos, size, size,  Color( col.r, col.g, col.b,  col.a * visible ) )
         end
     end
 end
 
-do
-    local tick = 1
-    local curtime
+hook.Add( "Tick", "simfphys_lights_managment", function()
+    ManageProjTextures()
 
-    hook.Add( "Tick", "simfphys_lights_managment", function()
-        -- Runs every other tick
-        if tick % 2 == 0 then
-            tick = 1
-        else
-            tick = tick + 1
+    curtime = CurTime()
 
-            return
-        end
+    if NextCheck < curtime then
+        NextCheck = curtime + checkinterval
 
-        ManageProjTextures()
+        for _, veh in ipairs( ents.FindByClass( "gmod_sent_vehicle_fphysics_base" ) ) do
+            if veh.EnableLights then continue end
+        
+            local listname = veh:GetLights_List()
 
-        curtime = CurTime()
-
-        if NextCheck < curtime then
-            NextCheck = curtime + checkinterval
-
-            for _, veh in ipairs( ents.FindByClass( "gmod_sent_vehicle_fphysics_base" ) ) do
-                if veh.EnableLights then continue end
-            
-                local listname = veh:GetLights_List()
-
-                if listname ~= "no_lights" then
-                    SetUpLights( listname, veh )
-                else
-                    veh.EnableLights = true
-                end
+            if listname ~= "no_lights" then
+                SetUpLights( listname, veh )
+            else
+                veh.EnableLights = true
             end
         end
-    end )
-end
+    end
+end )
 
 hook.Add( "PostDrawTranslucentRenderables", "simfphys_draw_sprites", function( _, skybox, skybox3d )
     if skybox or skybox3d then return end

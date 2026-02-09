@@ -384,7 +384,7 @@ function ENT:WriteVehicleDataTable()
 	self:SetPoseParameter( "vehicle_wheel_rl_height", 0 )
 	self:SetPoseParameter( "vehicle_wheel_rr_height", 0 )
 
-	timer.Simple( 0, function()
+	timer.Simple( 0.1, function()
 		if not IsValid( self ) then return end
 
 		self.posepositions["Pose1_Steerangle"] = self.CustomWheels and Angle() or self:GetAttachment( self:LookupAttachment( "wheel_fl" ) ).Ang
@@ -532,7 +532,7 @@ function ENT:SetupVehicle()
 					pobj:EnableMotion( false )
 				else
 					if IsValid( owner ) then
-						owner:PrintMessage( HUD_PRINTTALK, "ERROR: \"" .. self.CustomWheelModel .. "\" doesn't have an collision model! Removing vehicle. (Class: "..self:GetSpawn_List()..")")
+						owner:PrintMessage( HUD_PRINTTALK, "ERROR: \"" .. self.CustomWheelModel .. "\" doesn't have a collision model! Removing vehicle. (Class: "..self:GetSpawn_List()..")")
 					end
 
 					steerMaster:Remove()
