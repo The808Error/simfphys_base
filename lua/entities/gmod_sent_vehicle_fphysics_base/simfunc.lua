@@ -75,7 +75,6 @@ end
 function ENT:SimulateEngine( IdleRPM, LimitRPM, Powerbandstart, Powerbandend, curtime )
 	local selfTbl = self:GetTable()
 
-	local IsRunning = self:EngineActive()
 	local Throttle = self:GetThrottle()
 
 	if not self:IsDriveWheelsOnGround() then
@@ -130,6 +129,9 @@ function ENT:SimulateEngine( IdleRPM, LimitRPM, Powerbandstart, Powerbandend, cu
 	local EngineBrake = signThrottle == 0 and mathMin( engineRPM * ( engineRPM / LimitRPM ) ^ 2 / 60 * signSpeed, 100 ) or 0
 
 	local GearedPower = ( ( selfTbl.ThrottleDelay <= curtime and ( selfTbl.Torque + TorqueDiff ) * signThrottle * signGearRatio or 0 ) - EngineBrake ) / math.abs( selfTbl.GearRatio ) / 50
+
+	
+	local IsRunning = self:EngineActive()
 
 	selfTbl.EngineTorque = IsRunning and GearedPower * InvClutch or 0
 
@@ -514,26 +516,44 @@ function ENT:SimulateTurbo( LimitRPM )
 	return boost
 end
 
-function ENT:SimulateBlower(LimitRPM)
-	if not self.Blower or not self.BlowerWhine then return end
 
-	local Throttle = self:GetThrottle()
+local PI = math.pi
 
-	self.SmoothBlower = self.SmoothBlower + math.Clamp(math.min(self.EngineRPM / LimitRPM,1) * 500 - self.SmoothBlower,-20,20)
+function ENT:SimulateBlower( limitRPM )
+	local selfTbl = self:GetTable()
+	if not selfTbl.Blower or not selfTbl.BlowerWhine then return end
 
-	local Volume1 = math.Clamp( self.SmoothBlower / 400 * (1 - 0.4 * Throttle) ,0, 1)
-	local Volume2 = math.Clamp( self.SmoothBlower / 400 * (0.10 + 0.4 * Throttle) ,0, 1)
+	local wheelRadius = selfTbl.RearWheelRadius
 
-	local Pitch1 = 50 + math.Clamp( self.SmoothBlower / 4.5 , 0 , 205)
-	local Pitch2 = Pitch1 * 1.2
+	if selfTbl.FrontWheelPowered and selfTbl.RearWheelRadius then
+		wheelRadius = mathMax( selfTbl.FrontWheelRadius, selfTbl.RearWheelRadius )
+	elseif selfTbl.FrontWheelPowered then
+		wheelRadius = selfTbl.FrontWheelRadius
+	end
 
-	local boost = math.Clamp( (self.SmoothBlower / 600) ^ 4 ,0,1)
 
-	self.Blower:ChangeVolume( Volume1 )
-	self.Blower:ChangePitch( Pitch1 )
+	--local vol1 = math.Clamp( smoothBlower / 400 * ( 1 - 0.4 * throttle ), 0, 1 )
+	--local vol2 = math.Clamp( smoothBlower / 400 * ( 0.10 + 0.4 * throttle ), 0, 1 )
 
-	self.BlowerWhine:ChangeVolume( Volume2 )
-	self.BlowerWhine:ChangePitch( Pitch2 )
+	--local pitch1 = 50 + math.Clamp( smoothBlower / 4.5, 0, 205 )
+	--local pitch2 = pitch1 * 1.2
 
-	return boost
+
+	local throttle = self:GetThrottle()
+	local topSpeed = ( ( limitRPM * selfTbl.Gears[#selfTbl.Gears] * self:GetDifferentialGear() ) * PI * wheelRadius * 2 ) / 52
+	local vol = self:GetVelocity():LengthSqr()
+
+	local pitch = mathClamp( self:GetEngineRPM() * 0.005 * ( 1 + ( self:GetGear() * 0.45 ) ), 0, topSpeed )
+
+	selfTbl.Blower:ChangeVolume( vol * 10 )
+	selfTbl.Blower:ChangePitch( pitch )
+	
+	selfTbl.BlowerWhine:ChangeVolume( vol * 2 )
+	selfTbl.BlowerWhine:ChangePitch( pitch * 2 )
+
+	local smoothBlower = selfTbl.SmoothBlower
+	smoothBlower = smoothBlower + mathClamp( mathMin( selfTbl.EngineRPM / limitRPM, 1 ) * 500 - smoothBlower, -20, 20 )
+	selfTbl.SmoothBlower = smoothBlower
+
+	return mathClamp( ( smoothBlower / 600 ) ^ 4, 0, 1 )
 end

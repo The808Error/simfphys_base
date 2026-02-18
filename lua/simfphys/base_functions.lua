@@ -80,8 +80,8 @@ function simfphys.IsCar( ent )
 	return ent:GetClass():lower() == "gmod_sent_vehicle_fphysics_base"
 end
 
-local meta = FindMetaTable( "Player" )
-function meta:IsDrivingSimfphys()
+local PLY_META = FindMetaTable( "Player" )
+function PLY_META:IsDrivingSimfphys()
 	if not self:InVehicle() then return false end
 
 	local Pod = self:GetVehicle()
@@ -96,7 +96,7 @@ function meta:IsDrivingSimfphys()
 	return Pod == Car:GetDriverSeat()
 end
 
-function meta:GetSimfphys()
+function PLY_META:GetSimfphys()
 	if not self:InVehicle() then return NULL, false end
 
 	local Pod = self:GetVehicle()
@@ -126,6 +126,7 @@ function meta:GetSimfphys()
 		return NULL, false
 	end
 end
+
 
 if SERVER then
 	util.AddNetworkString( "simfphys_settings" )
@@ -213,6 +214,8 @@ if SERVER then
 		simfphys.UpdateFrictionData()
 	end)
 
+	local PI = math.pi
+
 	function simfphys.BuildVehicleInfo( ent )
 		if not simfphys.IsCar( ent ) then return false end
 
@@ -235,7 +238,7 @@ if SERVER then
 		local data = {}
 		data["torque"] = ent:GetMaxTorque() * (WheelRad / 10) * ent:GetEfficiency() * (1 + (ent:GetTurboCharged() and 0.3 or 0) + (ent:GetSuperCharged() and 0.48 or 0))
 		data["horsepower"] = (data["torque"] * ent:GetLimitRPM() / 9548.8) * 1.34
-		data["maxspeed"] = ((ent:GetLimitRPM() * ent.Gears[ table.Count( ent.Gears ) ] * ent:GetDifferentialGear()) * 3.14 * WheelRad * 2) / 52
+		data["maxspeed"] = ( ( ent:GetLimitRPM() * ent.Gears[#ent.Gears] * ent:GetDifferentialGear() ) * PI * WheelRad * 2 ) / 52
 		data["weight"] = Mass
 
 		return data
