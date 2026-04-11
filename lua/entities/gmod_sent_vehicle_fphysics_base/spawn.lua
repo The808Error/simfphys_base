@@ -19,15 +19,22 @@ function ENT:Initialize()
 	self:AddFlags( FL_OBJECT ) -- this allows npcs to see this entity
 
 	if not IsServerOK() then
-
 		self:Remove()
 
-		print("[SIMFPHYS] ERROR COULDN'T INITIALIZE VEHICLE!")
+		print( "[SIMFPHYS] ERROR COULDN'T INITIALIZE VEHICLE!" )
+
+		return
 	end
 
 	local PObj = self:GetPhysicsObject()
 
-	if not IsValid( PObj ) then print("[SIMFPHYS] ERROR COULDN'T INITIALIZE VEHICLE! '"..self:GetModel().."' has no physics model!") self:Remove() return end
+	if not IsValid( PObj ) then
+		print( "[SIMFPHYS] ERROR COULDN'T INITIALIZE VEHICLE! '" .. self:GetModel() .. "' has no physics model!" )
+		
+		self:Remove()
+		
+		return
+	end
 
 	PObj:EnableMotion( false )
 
@@ -165,7 +172,7 @@ function ENT:InitializeVehicle()
 	driverSeat:SetMoveType( MOVETYPE_NONE )
 
 	driverSeat:SetModel( "models/nova/airboat_seat.mdl" )
-	driverSeat:SetKeyValue( "vehiclescript","scripts/vehicles/prisoner_pod.txt" )
+	driverSeat:SetKeyValue( "vehiclescript", "scripts/vehicles/prisoner_pod.txt" )
 	driverSeat:SetKeyValue( "limitview", self.LimitView and 1 or 0 )
 	driverSeat:SetPos( View.ViewPos )
 	driverSeat:SetAngles( View.ViewAng )
@@ -246,6 +253,7 @@ function ENT:InitializeVehicle()
 	if self.Attachments then
 		for i = 1, #self.Attachments do
 			local prop = ents.Create( ( self.Attachments[i].IsGlass and "gmod_sent_vehicle_fphysics_attachment_translucent" or "gmod_sent_vehicle_fphysics_attachment") )
+			
 			prop:SetModel( self.Attachments[i].model )
 			prop:SetMaterial( self.Attachments[i].material )
 			prop:SetRenderMode( RENDERMODE_TRANSALPHA )
