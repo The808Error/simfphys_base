@@ -39,6 +39,16 @@ function ENT:PostEntityPaste(Player,Ent,CreatedEntities)
 			WireLib.ApplyDupeInfo(Player, Ent, Ent.EntityMods.WireDupeInfo, EntityLookup(CreatedEntities))
 		end
 	end
+
+	Player:AddCount( "simfphys", self )
+end
+
+function ENT:SpawnFunction( ply )
+	if not ply:CheckLimit( "simfphys" ) then return end
+
+	ply:AddCount( "simfphys", self )
+
+	return self
 end
 
 function ENT:OnSpawn()

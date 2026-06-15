@@ -257,6 +257,7 @@ if SERVER then
 	end
 
 	function simfphys.SpawnVehicle( Player, Pos, Ang, Model, Class, VName, VTable, bNoOwner )
+		if IsValid( Player ) and not Player:CheckLimit( "simfphys" )  then return end
 
 		if not bNoOwner then
 			if not gamemode.Call( "PlayerSpawnVehicle", Player, Model, VName, VTable ) then return end
@@ -269,6 +270,8 @@ if SERVER then
 
 		local Ent = ents.Create( "gmod_sent_vehicle_fphysics_base" )
 		if not Ent then return NULL end
+
+		Player:AddCount( "simfphys", Ent )
 
 		Ent:SetModel( Model )
 		Ent:SetAngles( Ang )

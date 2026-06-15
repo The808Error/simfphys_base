@@ -20,6 +20,15 @@ if SERVER then
 	include("simfphys/server/joystick.lua")
 	include("simfphys/server/damage.lua")
 	include("simfphys/server/poseparameter.lua")
+
+	
+	CreateConVar( "sbox_maxsimfphys", 3, { FCVAR_REPLICATED, FCVAR_ARCHIVE } )
+	
+	duplicator.RegisterEntityClass( "gmod_sent_vehicle_fphysics_base", function( ply, data )
+        if ply:CheckLimit( "simfphys" ) then
+            return duplicator.GenericDuplicatorFunction( ply, data )
+        end
+    end, "Data" )
 end
 
 if CLIENT then
